@@ -1045,9 +1045,10 @@
               <input type="password" id="deepseekKeyInput" placeholder="输入 DeepSeek API 密钥 (sk-...)" oninput="onAPIKeyChange()">
               <button class="btn-primary" onclick="saveAPIKey()">保存</button>
             </div>
-            <div><span class="api-status none" id="apiStatus">未配置</span></div>
+            <div><span class="api-status none" id="apiStatus">未配置</span> <span id="apiTestResult" style="font-size:0.75rem;margin-left:8px;"></span></div>
             <p class="settings-hint">免费获取：<a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek 开放平台</a>（手机号注册即可，新用户送500万tokens）</p>
-            <button class="btn-secondary" onclick="diagnoseAI()" style="margin-top:8px;width:100%;">🔍 AI配置诊断</button>
+            <button class="btn-secondary" onclick="testDeepSeekAPI()" style="margin-top:4px;width:100%;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;">🧪 测试 API 密钥是否可用</button>
+            <button class="btn-secondary" onclick="diagnoseAI()" style="margin-top:4px;width:100%;">🔍 AI配置诊断</button>
           </div>
           <div id="geminiConfig" class="settings-section" style="display:none;">
             <h4>Google Gemini API 密钥</h4>
@@ -2236,24 +2237,33 @@ function runAIGrading(taskId){
         max_tokens:2000,
         temperature:0.1
       })
-    }).then(r=>r.json()).then(data=>{
+    }).then(function(r){
+      if(!r.ok){
+        return r.text().then(function(body){
+          var statusMsg = 'HTTP '+r.status;
+          if(r.status===401) statusMsg += '（密钥无效或已过期）';
+          if(r.status===402) statusMsg += '（账户余额不足）';
+          if(r.status===429) statusMsg += '（请求太频繁）';
+          throw new Error('API返回错误: '+statusMsg+'\n详情: '+(body||'(无)'));
+        });
+      }
+      return r.json();
+    }).then(function(data){
       try{
-        const text=data.choices?.[0]?.message?.content||'';
-        const jsonMatch=text.match(/\{[\s\S]*\}/);
+        var text=data.choices?.[0]?.message?.content||'';
+        var jsonMatch=text.match(/\{[\s\S]*\}/);
         if(!jsonMatch) throw new Error('No JSON found');
-        const result=JSON.parse(jsonMatch[0]);
+        var result=JSON.parse(jsonMatch[0]);
         handleAIResult(taskId,result);
       }catch(e){
-        console.error('DeepSeek批改解析失败:',e,data);
-        showAIGradingError(taskId);
+        showAIGradingError(taskId,'AI返回格式异常，请重新尝试。');
       }
-    }).catch(err=>{
-      console.error('DeepSeek批改请求失败:',err);
-      showAIGradingError(taskId);
+    }).catch(function(err){
+      showAIGradingError(taskId,err.message);
     });
   } else {
     // Gemini API
-    fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+    fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+apiKey,{
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
         contents:[{parts:[
@@ -2262,26 +2272,37 @@ function runAIGrading(taskId){
         ]}],
         generationConfig:{temperature:0.2,maxOutputTokens:800}
       })
-    }).then(r=>r.json()).then(data=>{
+    }).then(function(r){
+      if(!r.ok){
+        return r.text().then(function(body){
+          var statusMsg = 'HTTP '+r.status;
+          if(r.status===400) statusMsg += '（请求格式错误）';
+          if(r.status===401||r.status===403) statusMsg += '（API密钥无效）';
+          if(r.status===429) statusMsg += '（超出每日配额）';
+          throw new Error('API返回错误: '+statusMsg+'\n详情: '+(body||'(无)'));
+        });
+      }
+      return r.json();
+    }).then(function(data){
       try{
-        const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-        const jsonMatch=text.match(/\{[\s\S]*\}/);
+        var text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+        var jsonMatch=text.match(/\{[\s\S]*\}/);
         if(!jsonMatch) throw new Error('No JSON found');
-        const result=JSON.parse(jsonMatch[0]);
+        var result=JSON.parse(jsonMatch[0]);
         handleAIResult(taskId,result);
       }catch(e){
-        console.error('Gemini批改解析失败:',e);
-        showAIGradingError(taskId);
+        showAIGradingError(taskId,'AI返回格式异常，请重新尝试。');
       }
-    }).catch(err=>{
-      console.error('Gemini批改请求失败:',err);
-      showAIGradingError(taskId);
+    }).catch(function(err){
+      showAIGradingError(taskId,err.message);
     });
   }
 }
-function showAIGradingError(taskId){
+}
+function showAIGradingError(taskId,errMsg){
+  var msg = errMsg || 'AI分析遇到问题，可能是照片不够清晰，或网络连接不稳定。';
   document.getElementById('aiGradingTitle').textContent='⚠️ AI批改失败';
-  document.getElementById('aiGradingContent').innerHTML='<p style="color:var(--text-secondary);">AI分析遇到问题，可能是照片不够清晰，或API调用出错。</p><button class="retry-ai-btn" onclick="runAIGrading(\''+taskId+'\')">🔄 重新批改</button>';
+  document.getElementById('aiGradingContent').innerHTML='<p style="color:var(--text-secondary);margin-bottom:12px;">'+msg+'</p><button class="retry-ai-btn" onclick="runAIGrading(\''+taskId+'\')">🔄 重新批改</button>';
   document.getElementById('aiGradingActions').innerHTML='<button class="btn-secondary" onclick="closeAIGrading()">关闭（转为手动审核）</button>';
 }
 
@@ -2593,6 +2614,47 @@ function diagnoseAI(){
   lines.push('──────────────────');
   lines.push('请截图此诊断信息发给我分析。');
   alert(lines.join('\n'));
+}
+function testDeepSeekAPI(){
+  var key = getActiveKey();
+  if(!key){
+    alert('❌ 未配置API密钥，请先粘贴密钥并点「保存」');
+    return;
+  }
+  var resultEl = document.getElementById('apiTestResult');
+  if(resultEl) resultEl.textContent = '测试中...';
+  fetch('https://api.deepseek.com/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({
+      model:'deepseek-chat',
+      messages:[{role:'user',content:'你好，请回复"测试成功"三个字'}],
+      max_tokens:10
+    })
+  }).then(function(r){
+    if(!r.ok){
+      return r.text().then(function(body){
+        var msg = 'HTTP '+r.status;
+        if(r.status===401) msg += '（密钥无效/已过期）';
+        if(r.status===402) msg += '（余额不足）';
+        if(r.status===429) msg += '（请求太频繁）';
+        throw new Error(msg+'\n详情: '+(body||'(无)'));
+      });
+    }
+    return r.json();
+  }).then(function(data){
+    var text = data.choices?.[0]?.message?.content || '';
+    if(text.indexOf('测试成功')>=0 || text.indexOf('success')>=0){
+      if(resultEl) resultEl.textContent = '✅ 密钥可用';
+      alert('✅ API密钥测试通过！\n\n密钥有效，AI批改功能可以正常使用。');
+    } else {
+      if(resultEl) resultEl.textContent = '⚠️ 响应异常';
+      alert('⚠️ API有响应但内容异常：\n' + text.substring(0,100));
+    }
+  }).catch(function(err){
+    if(resultEl) resultEl.textContent = '❌ 测试失败';
+    alert('❌ API测试失败！\n\n' + err.message + '\n\n可能原因：\n1. 密钥复制不完整或有多余空格\n2. 密钥已过期\n3. 账户余额用完\n4. 网络连接问题\n5. 微信内置浏览器限制了跨域请求');
+  });
 }
 function setProvider(prov){
   aiSettings.provider = prov;
