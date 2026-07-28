@@ -1252,7 +1252,13 @@ function loadState(){
   return {submissions:{},approved:{},rejected:{},scores:{},penalties:{},errors:[],gameHistory:[],firstDate:null,parentPassword:null,aiSettings:null,aiMode:null,freezeCards:0,rejectCounts:{},qualityGrades:{},mysteryBoxOpened:null,aiResults:{}};
 }
 function saveState(){
-  state.aiSettings = aiSettings;
+  // 始终把当前全局 aiSettings 拷入 state，避免引用脱钩
+  state.aiSettings = {
+    provider: aiSettings.provider || 'deepseek',
+    apiKey: aiSettings.apiKey || '',
+    deepseekKey: aiSettings.deepseekKey || '',
+    passThreshold: aiSettings.passThreshold || 70
+  };
   state.aiMode = aiMode;
   localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
 }
@@ -1265,9 +1271,12 @@ if(!state.rejectCounts) state.rejectCounts = {};
 if(!state.qualityGrades) state.qualityGrades = {};
 if(!('mysteryBoxOpened' in state)) state.mysteryBoxOpened = null;
 if(!state.aiResults) state.aiResults = {};
-// Backward compat: ensure provider field exists
+// 确保 aiSettings 对象完整，同步 provider + 补齐缺失字段
 if(!aiSettings.provider) aiSettings.provider = 'deepseek';
-if(!aiSettings.deepseekKey) aiSettings.deepseekKey = '';
+if(!('deepseekKey' in aiSettings)) aiSettings.deepseekKey = '';
+if(!('passThreshold' in aiSettings)) aiSettings.passThreshold = 70;
+// 把补齐后的 aiSettings 立即写回 state，保证后续 saveState 不会丢掉字段
+state.aiSettings = aiSettings;
 
 function isApproved(taskId){return state.approved[taskId];}
 function isSubmitted(taskId){return state.submissions[taskId] && !state.approved[taskId] && !state.rejected[taskId];}
@@ -2483,13 +2492,22 @@ function updateModeButtons(){
   }
 }
 function saveAPIKey(){
+  const val = (aiSettings.provider==='deepseek'
+    ? document.getElementById('deepseekKeyInput').value.trim()
+    : document.getElementById('geminiKeyInput').value.trim());
   if(aiSettings.provider==='deepseek'){
-    aiSettings.deepseekKey = document.getElementById('deepseekKeyInput').value.trim();
+    aiSettings.deepseekKey = val;
   } else {
-    aiSettings.apiKey = document.getElementById('geminiKeyInput').value.trim();
+    aiSettings.apiKey = val;
   }
-  // 同步刷新状态对象确保一致性
-  state.aiSettings = aiSettings;
+  // 直接写 state 并持久化（双保险：更新全局 + 更新 state）
+  if(!state.aiSettings) state.aiSettings = {};
+  if(aiSettings.provider==='deepseek') state.aiSettings.deepseekKey = val;
+  else state.aiSettings.apiKey = val;
+  state.aiSettings.provider = aiSettings.provider;
+  state.aiSettings.passThreshold = aiSettings.passThreshold;
+  // 也更新全局引用对齐
+  aiSettings = Object.assign(aiSettings, state.aiSettings);
   saveState(); onAPIKeyChange();
   const key = aiSettings.provider==='deepseek' ? aiSettings.deepseekKey : aiSettings.apiKey;
   alert(key?'API密钥已保存！':'API密钥已清空');
@@ -2524,24 +2542,28 @@ function setProvider(prov){
   saveState(); onAPIKeyChange();
 }
 function getActiveKey(){
-  // 先读 aiSettings（内存中的值）
-  let key = '';
-  if(aiSettings.provider==='deepseek') key = aiSettings.deepseekKey||'';
-  else key = aiSettings.apiKey||'';
-  // 兜底：如果内存中没有，直接从 localStorage 读取（防止 Service Worker 缓存导致状态不同步）
-  if(!key){
-    try{
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if(raw){
-        const s = JSON.parse(raw);
-        if(s.aiSettings){
-          if(aiSettings.provider==='deepseek') key = s.aiSettings.deepseekKey||'';
-          else key = s.aiSettings.apiKey||'';
-        }
+  // ★ 彻底重构：直接从 localStorage 读取，不依赖内存中的 aiSettings 全局变量
+  // 这解决了全局变量可能在某些操作中被意外替换/清空的问题
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      const s = JSON.parse(raw);
+      if(s.aiSettings){
+        const provider = s.aiSettings.provider || 'deepseek';
+        const key = provider==='deepseek' ? (s.aiSettings.deepseekKey||'') : (s.aiSettings.apiKey||'');
+        // 同步回全局 aiSettings，确保一致性
+        aiSettings.provider = provider;
+        if(provider==='deepseek') aiSettings.deepseekKey = key;
+        else aiSettings.apiKey = key;
+        return key;
       }
-    } catch(e){}
+    }
+  } catch(e){
+    console.error('getActiveKey: localStorage 读取失败', e);
   }
-  return key;
+  // 兜底：如果 localStorage 不存在或损坏，从全局读
+  if(aiSettings.provider==='deepseek') return aiSettings.deepseekKey||'';
+  return aiSettings.apiKey||'';
 }
 function updateThresholdLabel(){
   const val=document.getElementById('passThreshold').value;
