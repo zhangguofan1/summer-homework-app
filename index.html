@@ -519,6 +519,68 @@
   .freeze-use-card { background: var(--card); border-radius: 16px; padding: 20px; max-width: 320px; width: 90%; text-align: center; box-shadow: var(--shadow-lg); }
 
   /* ========== 响应式: 移动端 ========== */
+  /* ========== 每日签到 ========== */
+  .checkin-card { background: linear-gradient(135deg, #fef3c7, #fde68a, #fcd34d); border-radius: 14px; padding: 14px 16px; text-align: center; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; position: relative; overflow: hidden; }
+  .checkin-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(251,191,36,0.35); }
+  .checkin-card.checked { background: linear-gradient(135deg, #e5e7eb, #d1d5db); cursor: default; opacity: 0.7; }
+  .checkin-card .ci-icon { font-size: 2rem; display: block; margin-bottom: 4px; }
+  .checkin-card .ci-title { font-weight: 700; font-size: 0.92rem; color: #92400e; }
+  .checkin-card .ci-sub { font-size: 0.72rem; color: #a16207; margin-top: 2px; }
+  .checkin-card .ci-streak { display: inline-block; background: #f59e0b; color: white; font-size: 0.7rem; font-weight: 700; padding: 2px 10px; border-radius: 12px; margin-top: 4px; }
+  .checkin-popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 700; animation: fadeIn 0.3s; }
+  .checkin-popup { background: var(--card); border-radius: 20px; padding: 28px 24px; text-align: center; max-width: 340px; width: 90%; box-shadow: var(--shadow-lg); animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  .checkin-popup .cp-icon { font-size: 3.5rem; display: block; margin-bottom: 8px; }
+  .checkin-popup .cp-title { font-size: 1.2rem; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+  .checkin-popup .cp-streak { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; }
+  .checkin-popup .cp-reward { background: linear-gradient(135deg, #fef3c7, #fde68a); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .checkin-popup .cp-reward .cp-pts { font-size: 1.6rem; font-weight: 800; color: #92400e; }
+  .checkin-popup .cp-reward .cp-label { font-size: 0.78rem; color: #a16207; }
+  .checkin-popup .cp-bonus { font-size: 0.75rem; color: #059669; font-weight: 600; margin-top: 4px; }
+  .checkin-popup .cp-weeks { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+  .checkin-popup .cp-day { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; border: 2px solid var(--border); color: var(--text-secondary); }
+  .checkin-popup .cp-day.done { background: #fbbf24; border-color: #f59e0b; color: white; }
+  .checkin-popup .cp-day.today { background: #fef3c7; border-color: #f59e0b; color: #92400e; animation: pulse 1s infinite; }
+  .checkin-btn { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; padding: 12px 40px; border-radius: 20px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; margin-top: 4px; }
+  .checkin-btn:hover { transform: scale(1.05); box-shadow: 0 4px 16px rgba(245,158,11,0.4); }
+  .checkin-btn:active { transform: scale(0.96); }
+  @keyframes popIn { 0% { transform: scale(0.3); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes fadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+  @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.12); } }
+
+  /* ========== 进步趋势面板 ========== */
+  .trend-tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--bg); border-radius: 12px; padding: 4px; overflow-x: auto; }
+  .trend-tab { flex: 1; padding: 8px 12px; border: none; border-radius: 9px; cursor: pointer; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); background: transparent; white-space: nowrap; transition: all 0.2s; }
+  .trend-tab.active { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(99,102,241,0.3); }
+  .trend-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .trend-indicator { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 16px; font-size: 0.8rem; font-weight: 700; }
+  .trend-indicator.up { background: #dcfce7; color: #16a34a; }
+  .trend-indicator.down { background: #fee2e2; color: #dc2626; }
+  .trend-indicator.flat { background: #f0fdf4; color: var(--text-secondary); }
+  .trend-bars { display: flex; align-items: flex-end; gap: 8px; height: 160px; padding: 10px 0; overflow-x: auto; }
+  .trend-bar-wrap { flex: 1; min-width: 36px; max-width: 60px; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+  .trend-bar { width: 100%; border-radius: 6px 6px 0 0; transition: height 0.5s ease; position: relative; cursor: pointer; min-height: 4px; }
+  .trend-bar-label { font-size: 0.6rem; color: var(--text-secondary); margin-top: 4px; text-align: center; white-space: nowrap; }
+  .trend-bar-score { font-size: 0.65rem; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .trend-bar:hover { filter: brightness(0.9); }
+  .trend-quality-dist { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+  .trend-grade-chip { padding: 4px 10px; border-radius: 14px; font-size: 0.72rem; font-weight: 700; background: var(--bg); color: var(--text-secondary); }
+  .trend-grade-chip.has { color: white; }
+  .trend-grade-chip.s { background: #c084fc; }
+  .trend-grade-chip.a { background: #34d399; }
+  .trend-grade-chip.b { background: #60a5fa; }
+  .trend-grade-chip.c { background: #fbbf24; color: #92400e; }
+  .trend-grade-chip.d { background: #fb923c; }
+  .trend-grade-chip.f { background: #ef4444; }
+  .trend-summary { background: var(--bg); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  .trend-summary-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .trend-summary-row:last-child { border: none; }
+  .trend-summary-label { font-size: 0.82rem; color: var(--text-secondary); }
+  .trend-summary-val { font-size: 0.85rem; font-weight: 700; }
+  .trend-empty { text-align: center; padding: 40px; color: var(--text-secondary); }
+  .trend-empty .icon { font-size: 2.5rem; display: block; margin-bottom: 8px; }
+  .trend-score-flash { animation: scoreFlash 0.6s ease; }
+  @keyframes scoreFlash { 0%,100% { transform: scale(1); } 50% { transform: scale(1.15); color: var(--primary); } }
+
   @media (max-width: 767px) {
     .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); }
@@ -531,6 +593,10 @@
     .stat-grid { grid-template-columns: 1fr 1fr; }
     .detail-panel { padding: 12px; }
     body { padding-bottom: var(--bottom-nav-h); }
+    .trend-bars { height: 120px; }
+    .bottom-nav-inner { grid-template-columns: repeat(6, 1fr); }
+    .bottom-nav-item { font-size: 0.58rem; }
+    .bn-icon { font-size: 1.1rem; }
   }
 </style>
 </head>
@@ -584,6 +650,9 @@
       <button class="sidebar-link" data-panel="achieve" onclick="navigateTo('achieve')">
         <span class="link-icon">🏆</span> 成就墙
       </button>
+      <button class="sidebar-link" data-panel="trends" onclick="navigateTo('trends')">
+        <span class="link-icon">📈</span> 进步趋势
+      </button>
       <button class="sidebar-link" data-panel="settings" onclick="navigateTo('settings')">
         <span class="link-icon">⚙️</span> 设置
       </button>
@@ -613,6 +682,11 @@
             <div class="encourage-box" id="encourageBox">
               <p id="encourageText">"每一天的努力，都是在为未来的自己铺路！"</p>
               <div class="author">—— 加油，小小学习家！</div>
+            </div>
+            <div class="checkin-card" id="checkinCard" onclick="doDailyCheckin()">
+              <span class="ci-icon">🎁</span>
+              <span class="ci-title">每日签到领积分</span>
+              <span class="ci-sub" id="checkinSub">点击签到，获取随机奖励</span>
             </div>
             <div class="bonus-banner" id="bonusBanner" style="display:none;"></div>
             <div class="mystery-box" id="mysteryBox" style="display:none;" onclick="openMysteryBox()">
@@ -814,6 +888,23 @@
       </div>
     </div>
 
+    <!-- ====== 进步趋势 ====== -->
+    <div class="detail-panel panel-view" id="view-trends">
+      <div class="card">
+        <div class="card-header">📈 进步趋势分析</div>
+        <div class="card-body">
+          <p style="color:var(--text-secondary);font-size:0.82rem;margin-bottom:12px;">追踪每科作业质量的变化，看看孩子在进步还是需要加油~</p>
+          <div class="trend-tabs" id="trendTabs">
+            <button class="trend-tab active" onclick="switchTrendTab('overall')">📊 总览</button>
+            <button class="trend-tab" onclick="switchTrendTab('chinese')">📖 语文</button>
+            <button class="trend-tab" onclick="switchTrendTab('math')">🧮 数学</button>
+            <button class="trend-tab" onclick="switchTrendTab('english')">🔤 英语</button>
+          </div>
+          <div id="trendContent"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ====== 设置 ====== -->
     <div class="detail-panel panel-view" id="view-settings">
       <div class="card">
@@ -884,6 +975,9 @@
     <button class="bottom-nav-item" data-panel="errors" onclick="navigateTo('errors')">
       <span class="bn-icon">📝</span> 错题
     </button>
+    <button class="bottom-nav-item" data-panel="trends" onclick="navigateTo('trends')">
+      <span class="bn-icon">📈</span> 趋势
+    </button>
     <button class="bottom-nav-item" data-panel="achieve" onclick="navigateTo('achieve')">
       <span class="bn-icon">🏆</span> 成就
     </button>
@@ -947,6 +1041,23 @@
     <div style="display:flex;gap:8px;margin-top:14px;" id="aiGradingActions">
       <button class="btn-secondary" onclick="closeAIGrading()">关闭</button>
     </div>
+  </div>
+</div>
+
+<!-- 每日签到弹窗 -->
+<div class="checkin-popup-overlay" id="checkinPopup" style="display:none;" onclick="if(event.target===this)closeCheckinPopup()">
+  <div class="checkin-popup">
+    <span class="cp-icon">🎉</span>
+    <div class="cp-title">每日签到</div>
+    <div class="cp-streak" id="cpStreakText">连续签到 1 天</div>
+    <div class="cp-weeks" id="cpWeekDots"></div>
+    <div class="cp-reward">
+      <div class="cp-pts" id="cpPts">💎 +3</div>
+      <div class="cp-label">今日签到奖励</div>
+      <div class="cp-bonus" id="cpBonus" style="display:none;"></div>
+    </div>
+    <button class="checkin-btn" id="checkinClaimBtn" onclick="claimCheckin()">🎁 领取奖励</button>
+    <button style="display:block;margin:8px auto 0;background:none;border:none;color:var(--text-secondary);font-size:0.78rem;cursor:pointer;" onclick="closeCheckinPopup()">下次再说</button>
   </div>
 </div>
 
@@ -1069,6 +1180,336 @@ function getStreak(){
   return streak;
 }
 
+// ===================== 每日签到 =====================
+let checkinData = null;
+function loadCheckinData(){
+  const raw = localStorage.getItem('homeworkCheckin');
+  checkinData = raw ? JSON.parse(raw) : { dates:[], streak:0, lastDate:null };
+}
+function saveCheckinData(){
+  localStorage.setItem('homeworkCheckin', JSON.stringify(checkinData));
+}
+function initCheckin(){
+  loadCheckinData();
+  updateCheckinCard();
+  const today = getCheckinDateStr();
+  if(checkinData.lastDate !== today){
+    // Not checked in today — show popup after short delay
+    setTimeout(()=>showCheckinPopup(), 800);
+  }
+}
+function getCheckinDateStr(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function updateCheckinCard(){
+  const card = document.getElementById('checkinCard');
+  const sub = document.getElementById('checkinSub');
+  if(!card||!sub) return;
+  const today = getCheckinDateStr();
+  if(checkinData.lastDate === today){
+    card.classList.add('checked');
+    card.querySelector('.ci-icon').textContent = '✅';
+    card.querySelector('.ci-title').textContent = '今日已签到';
+    sub.textContent = `连续 ${checkinData.streak} 天 | 明天再来~`;
+    card.onclick = ()=>{ showCheckinHistory(); };
+  } else {
+    card.classList.remove('checked');
+    card.querySelector('.ci-icon').textContent = '🎁';
+    card.querySelector('.ci-title').textContent = '每日签到领积分';
+    sub.textContent = checkinData.streak>0 ? `连续 ${checkinData.streak} 天 | 点击签到` : '点击签到，获取随机奖励';
+    card.onclick = ()=>{ showCheckinPopup(); };
+  }
+}
+function showCheckinPopup(){
+  const today = getCheckinDateStr();
+  if(checkinData.lastDate === today){
+    showCheckinHistory();
+    return;
+  }
+  // Calculate streak
+  const yesterday = getYesterdayStr();
+  if(checkinData.lastDate === yesterday){
+    checkinData.streak += 1;
+  } else if(checkinData.lastDate && checkinData.lastDate !== yesterday){
+    checkinData.streak = 1;
+  } else {
+    checkinData.streak = 1;
+  }
+  // Random bonus: 1-5 points, with 7-day bonus
+  let pts = Math.floor(Math.random()*5)+1;
+  let bonusText = '';
+  if(checkinData.streak % 7 === 0){
+    const bonusPts = Math.floor(checkinData.streak/7)*5;
+    pts += bonusPts;
+    bonusText = `🎊 连续${checkinData.streak}天！额外奖励 +${bonusPts} 积分`;
+  }
+  document.getElementById('cpPts').textContent = `💎 +${pts}`;
+  document.getElementById('cpStreakText').textContent = `连续签到 ${checkinData.streak} 天`;
+  document.getElementById('cpBonus').textContent = bonusText;
+  document.getElementById('cpBonus').style.display = bonusText?'':'none';
+  // Render week dots
+  renderWeekDots();
+  document.getElementById('checkinPopup').style.display = '';
+  // Store pending points for claim
+  document.getElementById('checkinPopup').dataset.pts = pts;
+}
+function renderWeekDots(){
+  const dots = document.getElementById('cpWeekDots');
+  if(!dots) return;
+  const today = getCheckinDateStr();
+  const todayD = new Date();
+  let html = '';
+  for(let i=6; i>=0; i--){
+    const d = new Date(todayD);
+    d.setDate(d.getDate()-i);
+    const ds = `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+    const isToday = ds === today;
+    const isDone = checkinData.dates.includes(ds);
+    const cls = isToday?'today':(isDone?'done':'');
+    html += `<div class="cp-day ${cls}">${isDone?'✓':(d.getDate())}</div>`;
+  }
+  dots.innerHTML = html;
+}
+function getYesterdayStr(){
+  const d = new Date();
+  d.setDate(d.getDate()-1);
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+function claimCheckin(){
+  const popup = document.getElementById('checkinPopup');
+  const pts = parseInt(popup.dataset.pts||'0');
+  if(pts<=0){ popup.style.display='none'; return; }
+  const today = getCheckinDateStr();
+  const todayApp = getTodayStr();
+  // Record check-in
+  if(!checkinData.dates.includes(today)){
+    checkinData.dates.push(today);
+  }
+  checkinData.lastDate = today;
+  // Award checkin points to the app's daily score
+  const ciKey = '_ci_'+today;
+  if(!state[ciKey]){
+    state[ciKey] = pts;
+    if(!state.scores[todayApp]) state.scores[todayApp] = 0;
+    state.scores[todayApp] += pts;
+  }
+  saveCheckinData();
+  saveState();
+  popup.style.display = 'none';
+  updateCheckinCard();
+  updateScoreBar();
+  showRewardPopup('签到', pts, true);
+  renderToday(); renderMiniAchieves();
+}
+function closeCheckinPopup(){
+  document.getElementById('checkinPopup').style.display = 'none';
+}
+function showRewardPopup(label, pts, isBonus){
+  const popup = document.createElement('div');
+  popup.className = 'reward-popup';
+  popup.textContent = (isBonus?'🎁 ':'') + `${label} +${pts} 💎`;
+  document.body.appendChild(popup);
+  setTimeout(()=>popup.remove(), 2200);
+}
+function showCheckinHistory(){
+  const today = getCheckinDateStr();
+  if(checkinData.lastDate !== today) return;
+  // Show a simple info popup
+  const pts = state['_ci_'+today] || 0;
+  const overlay = document.getElementById('checkinPopup');
+  if(!overlay) return;
+  document.getElementById('cpPts').textContent = '✅ 已签到';
+  document.getElementById('cpStreakText').textContent = `连续签到 ${checkinData.streak} 天`;
+  document.getElementById('cpBonus').textContent = '';
+  document.getElementById('cpBonus').style.display = 'none';
+  renderWeekDots();
+  overlay.style.display = '';
+  overlay.dataset.pts = '0';
+  overlay.querySelector('.checkin-btn').textContent = '👍 知道了';
+  overlay.querySelector('.checkin-btn').onclick = ()=>{ overlay.style.display = 'none'; overlay.querySelector('.checkin-btn').textContent = '🎁 领取奖励'; overlay.querySelector('.checkin-btn').onclick = claimCheckin; };
+}
+function doDailyCheckin(){
+  const today = getCheckinDateStr();
+  if(checkinData.lastDate === today){
+    showCheckinHistory();
+  } else {
+    showCheckinPopup();
+  }
+}
+
+// ===================== 进步趋势分析 =====================
+let trendTab = 'overall';
+function switchTrendTab(tab){
+  trendTab = tab;
+  document.querySelectorAll('.trend-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.trend-tab').forEach(t=>{ if(t.textContent.includes(tab==='overall'?'总览':(tab==='chinese'?'语文':(tab==='math'?'数学':'英语')))) t.classList.add('active'); });
+  renderTrends();
+}
+function getSubjectTrends(){
+  const trends = { overall:[], chinese:[], math:[], english:[] };
+  // Collect all approved tasks with quality data
+  const subjectMap = { chinese:'chinese', math:'math', english:'english' };
+  // Build date → subject → scores map
+  const dateSubjectScores = {};
+  Object.entries(state.qualityGrades).forEach(([taskId, gradeData])=>{
+    if(!state.approved[taskId]) return;
+    // Find the task subject from homeworkData
+    let foundSubject = null;
+    let foundDate = null;
+    for(const [date, tasks] of Object.entries(homeworkData)){
+      const task = tasks.find(t=>t.id===taskId);
+      if(task){
+        foundSubject = task.subject;
+        foundDate = date;
+        break;
+      }
+    }
+    if(!foundSubject||!foundDate) return;
+    if(!dateSubjectScores[foundDate]) dateSubjectScores[foundDate] = {};
+    if(!dateSubjectScores[foundDate][foundSubject]) dateSubjectScores[foundDate][foundSubject] = [];
+    dateSubjectScores[foundDate][foundSubject].push(gradeData.score||0);
+  });
+  // Build trend arrays
+  const sortedDates = Object.keys(dateSubjectScores).sort();
+  sortedDates.forEach(date=>{
+    // Overall: average across all subjects
+    const allScores = [];
+    Object.values(dateSubjectScores[date]).forEach(scores=>allScores.push(...scores));
+    if(allScores.length>0){
+      trends.overall.push({ date, avgScore: Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length), count: allScores.length });
+    }
+    // Per subject
+    ['chinese','math','english'].forEach(sub=>{
+      const scores = dateSubjectScores[date][sub];
+      if(scores&&scores.length>0){
+        trends[sub].push({ date, avgScore: Math.round(scores.reduce((a,b)=>a+b,0)/scores.length), count: scores.length });
+      }
+    });
+  });
+  return trends;
+}
+function getQualityDist(subject){
+  const dist = { S:0, A:0, B:0, C:0, D:0, F:0 };
+  Object.entries(state.qualityGrades).forEach(([taskId, gd])=>{
+    if(!state.approved[taskId]) return;
+    if(subject!=='overall'){
+      let found=false;
+      for(const tasks of Object.values(homeworkData)){
+        if(tasks.find(t=>t.id===taskId&&t.subject===subject)){ found=true; break; }
+      }
+      if(!found) return;
+    }
+    const grade = (gd.grade||'B').charAt(0).toUpperCase();
+    if(dist[grade]!==undefined) dist[grade]++;
+  });
+  return dist;
+}
+function calcTrend(data){
+  if(data.length<2) return { dir:'flat', change:0, label:'数据不足' };
+  const recent = data.slice(-7);
+  if(recent.length<2) return { dir:'flat', change:0, label:'数据不足' };
+  const firstHalf = recent.slice(0, Math.floor(recent.length/2));
+  const secondHalf = recent.slice(Math.floor(recent.length/2));
+  const avg1 = firstHalf.reduce((a,b)=>a+b.avgScore,0)/firstHalf.length;
+  const avg2 = secondHalf.reduce((a,b)=>a+b.avgScore,0)/secondHalf.length;
+  const change = avg2 - avg1;
+  const pct = avg1>0 ? Math.round((change/avg1)*100) : 0;
+  if(pct>=5) return { dir:'up', change:pct, label:`持续进步 ↑${pct}%` };
+  if(pct<=-5) return { dir:'down', change:pct, label:`有所退步 ↓${Math.abs(pct)}%` };
+  return { dir:'flat', change:pct, label:'保持稳定 ~' };
+}
+function renderTrends(){
+  const container = document.getElementById('trendContent');
+  if(!container) return;
+  const allTrends = getSubjectTrends();
+  const data = allTrends[trendTab] || [];
+  const dist = getQualityDist(trendTab);
+  const trend = calcTrend(data);
+  const subjectNames = { overall:'全部科目', chinese:'语文', math:'数学', english:'英语' };
+  const subjectEmoji = { overall:'📊', chinese:'📖', math:'🧮', english:'🔤' };
+  const barColors = { overall:'#6366f1', chinese:'#ec4899', math:'#f59e0b', english:'#10b981' };
+  const color = barColors[trendTab]||'#6366f1';
+
+  if(data.length===0){
+    container.innerHTML = `<div class="trend-empty"><span class="icon">📭</span><p>还没有${subjectNames[trendTab]}的批改数据</p><p style="font-size:0.78rem;margin-top:4px;">完成作业并通过AI批改后，这里就会显示趋势图啦！</p></div>`;
+    return;
+  }
+
+  // Trend indicator
+  let indicatorHtml = '';
+  if(trend.dir==='up') indicatorHtml = `<span class="trend-indicator up">📈 ${trend.label}</span>`;
+  else if(trend.dir==='down') indicatorHtml = `<span class="trend-indicator down">📉 ${trend.label}</span>`;
+  else indicatorHtml = `<span class="trend-indicator flat">➡️ ${trend.label}</span>`;
+
+  // Bar chart
+  const maxScore = Math.max(...data.map(d=>d.avgScore), 10);
+  const recentData = data.slice(-14); // Show up to 14 days
+  const barWidth = Math.max(30, Math.min(50, Math.floor((700 - recentData.length*8)/recentData.length)));
+  let barsHtml = recentData.map((d,i)=>{
+    const h = Math.max(4, (d.avgScore/maxScore)*150);
+    return `<div class="trend-bar-wrap" style="min-width:${barWidth}px;max-width:${barWidth+8}px;">
+      <div class="trend-bar-score">${d.avgScore}</div>
+      <div class="trend-bar" style="height:${h}px;background:${color};opacity:${0.5+0.5*(d.avgScore/maxScore)};" title="${d.date}: 均分${d.avgScore} (${d.count}项)"></div>
+      <div class="trend-bar-label">${d.date}</div>
+    </div>`;
+  }).join('');
+
+  // Quality distribution
+  const totalDist = Object.values(dist).reduce((a,b)=>a+b,0);
+  let distHtml = '';
+  if(totalDist>0){
+    distHtml = `<div style="font-size:0.8rem;font-weight:600;margin-bottom:4px;margin-top:2px;">品质等级分布 (共${totalDist}项):</div><div class="trend-quality-dist">`;
+    ['S','A','B','C','D','F'].forEach(g=>{
+      const cnt = dist[g];
+      const hasClass = cnt>0?`has ${g.toLowerCase()}`:'';
+      distHtml += `<span class="trend-grade-chip ${hasClass}">${g}: ${cnt}次</span>`;
+    });
+    distHtml += `</div>`;
+  }
+
+  // Summary stats
+  const allScores = data.map(d=>d.avgScore);
+  const bestScore = Math.max(...allScores);
+  const avgAllScores = Math.round(allScores.reduce((a,b)=>a+b,0)/allScores.length);
+  const totalTasks = data.reduce((a,b)=>a+b.count,0);
+
+  container.innerHTML = `
+    <div class="trend-header">
+      <span style="font-size:1.1rem;">${subjectEmoji[trendTab]} ${subjectNames[trendTab]}</span>
+      ${indicatorHtml}
+    </div>
+    <div class="trend-summary">
+      <div class="trend-summary-row">
+        <span class="trend-summary-label">📅 统计天数</span>
+        <span class="trend-summary-val">${data.length} 天</span>
+      </div>
+      <div class="trend-summary-row">
+        <span class="trend-summary-label">✅ 总批改项</span>
+        <span class="trend-summary-val">${totalTasks} 项</span>
+      </div>
+      <div class="trend-summary-row">
+        <span class="trend-summary-label">📊 平均得分</span>
+        <span class="trend-summary-val" style="color:${avgAllScores>=80?'#16a34a':(avgAllScores>=60?'#f59e0b':'#dc2626')}">${avgAllScores} 分</span>
+      </div>
+      <div class="trend-summary-row">
+        <span class="trend-summary-label">🏆 最高得分</span>
+        <span class="trend-summary-val" style="color:#8b5cf6;">${bestScore} 分</span>
+      </div>
+      ${recentData.length>=2?`
+      <div class="trend-summary-row">
+        <span class="trend-summary-label">🔄 最近变化</span>
+        <span class="trend-summary-val ${(recentData[recentData.length-1].avgScore - recentData[recentData.length-2].avgScore)>=0?'trend-score-flash':''}" style="color:${(recentData[recentData.length-1].avgScore - recentData[recentData.length-2].avgScore)>=0?'#16a34a':'#dc2626'}">
+          ${(recentData[recentData.length-1].avgScore - recentData[recentData.length-2].avgScore)>=0?'+':''}${recentData[recentData.length-1].avgScore - recentData[recentData.length-2].avgScore}分 vs 上次
+        </span>
+      </div>`:''}
+    </div>
+    <div style="font-size:0.8rem;font-weight:600;margin-bottom:6px;">📈 每日均分走势</div>
+    <div class="trend-bars">${barsHtml}</div>
+    ${distHtml}
+  `;
+}
+
 // ===================== 导航 =====================
 let currentPanel = 'dashboard';
 function navigateTo(panel){
@@ -1085,13 +1526,14 @@ function navigateTo(panel){
 
   if(window.innerWidth < 768) closeSidebar();
 
-  if(panel==='dashboard'){ renderToday(); renderMiniAchieves(); }
+  if(panel==='dashboard'){ renderToday(); renderMiniAchieves(); updateCheckinCard(); }
   if(panel==='calendar') renderCalendar();
   if(panel==='games'){}
   if(panel==='errors'){ renderErrors(); renderAnalysis(); }
   if(panel==='achieve') renderAchievements();
   if(panel==='review') renderReview();
   if(panel==='settings'){ updateThresholdLabel(); onAPIKeyChange(); updateModeButtons(); }
+  if(panel==='trends'){ switchTrendTab('overall'); }
   updateScoreBar();
 }
 
@@ -2066,6 +2508,7 @@ function init(){
   renderAchievements();
   updateScoreBar();
   renderReview();
+  initCheckin();
 
   // Check for review items
   const submissions=Object.entries(state.submissions).filter(([tid])=>!state.approved[tid]&&!state.rejected[tid]);
