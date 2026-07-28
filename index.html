@@ -371,6 +371,16 @@
   .error-item .error-question { font-weight: 600; margin-bottom: 2px; }
   .error-item .error-tags { display: flex; gap: 3px; flex-wrap: wrap; margin-top: 4px; }
   .error-item .error-tag { background: #fee2e2; color: #991b1b; padding: 1px 5px; border-radius: 6px; font-size: 0.68rem; }
+  .error-item.imported { border-left-color: var(--primary); background: #eef2ff; }
+
+  /* 错题学科标签 */
+  .err-tab {
+    padding: 5px 12px; border-radius: 16px; border: 1px solid var(--border);
+    background: var(--card); color: var(--text-secondary); font-size: 0.78rem;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .err-tab:hover { border-color: var(--primary); color: var(--primary); }
+  .err-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
   .analysis-box { background: linear-gradient(135deg, #dbeafe, #bfdbfe); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; }
   .analysis-box h4 { margin-bottom: 6px; color: #1e3a5f; font-size: 0.85rem; }
   .weak-tag {
@@ -900,8 +910,27 @@
 
     <!-- ====== 错题本 ====== -->
     <div class="detail-panel panel-view" id="view-errors">
+      <!-- 学科筛选标签 + AI导入 -->
       <div class="card">
-        <div class="card-header">➕ 添加错题</div>
+        <div class="card-body" style="padding:12px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;justify-content:space-between;">
+            <div style="display:flex;gap:6px;flex-wrap:wrap;" id="errSubjectTabs">
+              <button class="err-tab active" onclick="filterErrorsBySubject('all')">📋 全部</button>
+              <button class="err-tab" onclick="filterErrorsBySubject('chinese')">🇨🇳 语文</button>
+              <button class="err-tab" onclick="filterErrorsBySubject('math')">📐 数学</button>
+              <button class="err-tab" onclick="filterErrorsBySubject('english')">🇬🇧 英语</button>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn-primary" onclick="importAIErrors()" id="btnImportAI" style="font-size:0.78rem;padding:6px 12px;">🤖 导入AI错题</button>
+              <button class="btn-secondary" onclick="toggleManualAdd()" style="font-size:0.78rem;padding:6px 12px;">✏️ 手动添加</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 手动添加表单（默认折叠） -->
+      <div class="card" id="manualAddCard" style="display:none;">
+        <div class="card-header">✏️ 手动添加错题</div>
         <div class="card-body">
           <div class="error-form">
             <select id="errSubject"><option value="math">数学</option><option value="chinese">语文</option><option value="english">英语</option></select>
@@ -914,17 +943,21 @@
               </div>
             </div>
             <textarea id="errAnalysis" placeholder="分析：这道题错在哪里？（可选）"></textarea>
-            <button class="btn-primary" onclick="addError()" style="width:100%;">添加错题 +10积分</button>
+            <button class="btn-primary" onclick="addError()" style="width:100%;">添加错题 +5积分</button>
           </div>
         </div>
       </div>
+
+      <!-- 错题列表 -->
+      <div class="card">
+        <div class="card-header">📋 错题列表 <span style="font-weight:400;font-size:0.75rem;color:var(--text-secondary);margin-left:auto;" id="errCount">共0道</span></div>
+        <div class="card-body"><div class="error-list" id="errorList"></div></div>
+      </div>
+
+      <!-- 薄弱知识点 -->
       <div class="card">
         <div class="card-header">📊 薄弱知识点</div>
         <div class="card-body"><div class="analysis-box" id="analysisBox"><p style="color:var(--text-secondary);">还没有录入错题，开始记录吧！</p></div></div>
-      </div>
-      <div class="card">
-        <div class="card-header">📋 错题列表</div>
-        <div class="card-body"><div class="error-list" id="errorList"></div></div>
       </div>
     </div>
 
@@ -989,6 +1022,9 @@
       <div class="card" id="aiSettingsCard">
         <div class="card-header">🔑 API 配置</div>
         <div class="card-body">
+          <div id="aiCardHint" class="settings-hint" style="background:#fef3c7;padding:8px 12px;border-radius:8px;margin-bottom:12px;color:#92400e;display:none;">
+            ⚠️ 当前为<strong>手动审核模式</strong>，API密钥仅AI模式生效。<br>切换到上方"AI自动批改"后即可使用。
+          </div>
           <div class="settings-section">
             <h4>选择AI服务商</h4>
             <div class="ai-mode-toggle" style="margin-bottom:10px;">
@@ -1626,7 +1662,7 @@ function navigateTo(panel){
   if(panel==='dashboard'){ renderToday(); renderMiniAchieves(); updateCheckinCard(); }
   if(panel==='calendar') renderCalendar();
   if(panel==='games'){}
-  if(panel==='errors'){ renderErrors(); renderAnalysis(); }
+  if(panel==='errors'){ errorFilter='all'; updateImportAIButton(); filterErrorsBySubject('all'); }
   if(panel==='achieve') renderAchievements();
   if(panel==='review') renderReview();
   if(panel==='settings'){ updateThresholdLabel(); onAPIKeyChange(); updateModeButtons(); }
@@ -2408,7 +2444,11 @@ function updateModeButtons(){
   if(aiBtn){aiBtn.classList.toggle('active',aiMode);}
   if(manBtn){manBtn.classList.toggle('active',!aiMode);}
   const card=document.getElementById('aiSettingsCard');
-  if(card) card.style.display=aiMode?'':'none';
+  if(card){
+    card.style.display=''; // Always show API config
+    const hint=document.getElementById('aiCardHint');
+    if(hint) hint.style.display=aiMode?'none':'';
+  }
 }
 function saveAPIKey(){
   if(aiSettings.provider==='deepseek'){
@@ -2699,6 +2739,89 @@ document.addEventListener('DOMContentLoaded',()=>{
   });
 });
 
+// ===================== 错题本辅助功能 =====================
+let errorFilter = 'all';
+
+function toggleManualAdd(){
+  const card=document.getElementById('manualAddCard');
+  card.style.display=card.style.display==='none'?'':'none';
+}
+
+function filterErrorsBySubject(subj){
+  errorFilter = subj;
+  document.querySelectorAll('.err-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.err-tab').forEach(t=>{
+    if(t.textContent.includes(subj==='all'?'全部':subj==='chinese'?'语文':subj==='math'?'数学':'英语')) t.classList.add('active');
+  });
+  renderErrors(); renderAnalysis();
+}
+
+function countPendingAIErrors(){
+  let count=0;
+  Object.entries(state.aiResults).forEach(([taskId,res])=>{
+    if(!res||!res.questions) return;
+    res.questions.forEach(q=>{
+      if(q.correct) return;
+      if(!state.errors.find(e=>e.aiTaskId===taskId && e.question===q.question)) count++;
+    });
+  });
+  return count;
+}
+
+function updateImportAIButton(){
+  const btn=document.getElementById('btnImportAI');
+  if(!btn) return;
+  const pending=countPendingAIErrors();
+  if(pending>0){
+    btn.textContent='🤖 导入AI错题 ('+pending+'道)';
+    btn.style.opacity='1';
+    btn.disabled=false;
+  } else {
+    btn.textContent='🤖 暂无新错题';
+    btn.style.opacity='0.6';
+    btn.disabled=true;
+  }
+}
+
+function importAIErrors(){
+  const imported=[];
+  Object.entries(state.aiResults).forEach(([taskId,res])=>{
+    if(!res||!res.questions) return;
+    let task=null;
+    Object.values(homeworkData).forEach(tasks=>{
+      const t=tasks.find(tt=>tt.id===taskId);
+      if(t) task=t;
+    });
+    if(!task) return;
+    const subject=task.subject;
+    res.questions.forEach(q=>{
+      if(q.correct) return;
+      const dup=state.errors.find(e=>e.aiTaskId===taskId && e.question===q.question);
+      if(!dup){
+        imported.push({
+          id:Date.now()+Math.random(), subject,
+          question:q.question||'未知题目',
+          answer:q.correctAnswer||'',
+          wrong:q.studentAnswer||'',
+          analysis:'从AI批改自动导入（'+task.text+'）',
+          tags:[], date:getTodayStr(),
+          source:'ai', aiTaskId:taskId, importedDate:getTodayStr()
+        });
+      }
+    });
+  });
+  if(imported.length===0){
+    alert('没有新的错题可导入。\n\nAI批改过的作业中所有错题已经导入过了，或者还没有AI批改的作业。');
+    return;
+  }
+  state.errors.push(...imported);
+  const today=getTodayStr();
+  state.scores[today]=(state.scores[today]||0)+imported.length;
+  saveState();
+  renderErrors(); renderAnalysis(); updateScoreBar(); updateImportAIButton();
+  showPopup('🤖 已导入 '+imported.length+' 道AI错题！+'+imported.length+'分','reward');
+}
+
 function addError(){
   const subject=document.getElementById('errSubject').value;
   const question=document.getElementById('errQuestion').value.trim();
@@ -2724,9 +2847,20 @@ function renderErrors(){
   const container=document.getElementById('errorList');
   if(!container) return;
   const subjects={math:'📐 数学',chinese:'🇨🇳 语文',english:'🇬🇧 英语'};
-  if(state.errors.length===0){container.innerHTML='<div class="empty-state"><div class="icon">📝</div><p>还没有记录错题</p></div>';return;}
-  container.innerHTML=state.errors.slice().reverse().map(e=>`<div class="error-item">
-    <div class="error-subject">${subjects[e.subject]} · ${e.date} ${e.source==='ai'?'🤖AI识别':''}</div>
+  // Filter by subject
+  let filtered = state.errors;
+  if(errorFilter!=='all') filtered = state.errors.filter(e=>e.subject===errorFilter);
+
+  const countEl=document.getElementById('errCount');
+  if(countEl) countEl.textContent='共'+filtered.length+'道';
+
+  if(filtered.length===0){
+    const msg = errorFilter==='all' ? '还没有记录错题' : '该学科暂无错题';
+    container.innerHTML='<div class="empty-state"><div class="icon">📝</div><p>'+msg+'</p></div>';
+    return;
+  }
+  container.innerHTML=filtered.slice().reverse().map(e=>`<div class="error-item ${e.source==='ai'?'imported':''}">
+    <div class="error-subject">${subjects[e.subject]} · ${e.date} ${e.source==='ai'?'🤖AI导入':'✏️手动'}</div>
     <div class="error-question">${e.question}</div>
     ${e.answer?`<div style="color:var(--success);font-size:0.8rem;">✅ 正确答案: ${e.answer}</div>`:''}
     ${e.wrong?`<div style="color:var(--danger);font-size:0.8rem;">❌ 你的答案: ${e.wrong}</div>`:''}
@@ -2738,9 +2872,16 @@ function renderErrors(){
 function renderAnalysis(){
   const box=document.getElementById('analysisBox');
   if(!box) return;
-  if(state.errors.length===0){box.innerHTML='<p style="color:var(--text-secondary);">还没有录入错题，开始记录第一道错题吧！</p>';return;}
+  // Filter by subject
+  let filtered = state.errors;
+  if(errorFilter!=='all') filtered = state.errors.filter(e=>e.subject===errorFilter);
+
+  if(filtered.length===0){
+    const msg = errorFilter==='all' ? '还没有录入错题，开始记录第一道错题吧！' : '该学科暂无错题';
+    box.innerHTML='<p style="color:var(--text-secondary);">'+msg+'</p>';return;
+  }
   const tagCount={};
-  state.errors.forEach(e=>{(e.tags||[]).forEach(t=>{tagCount[t]=(tagCount[t]||0)+1;});});
+  filtered.forEach(e=>{(e.tags||[]).forEach(t=>{tagCount[t]=(tagCount[t]||0)+1;});});
   const sorted=Object.entries(tagCount).sort((a,b)=>b[1]-a[1]);
   if(sorted.length===0){box.innerHTML='<p style="color:var(--text-secondary);">错题还没有添加知识点标签</p>';return;}
   let html='<h4>⚠️ 薄弱知识点 TOP5</h4><div style="margin-top:8px;">';
