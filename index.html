@@ -923,13 +923,30 @@
         <div class="card-header">🔑 API 配置</div>
         <div class="card-body">
           <div class="settings-section">
-            <h4>Google Gemini API 密钥</h4>
+            <h4>选择AI服务商</h4>
+            <div class="ai-mode-toggle" style="margin-bottom:10px;">
+              <button class="ai-mode-btn active" id="provDeepseek" onclick="setProvider('deepseek')">🚀 DeepSeek（推荐）</button>
+              <button class="ai-mode-btn" id="provGemini" onclick="setProvider('gemini')">🌐 Google Gemini</button>
+            </div>
+            <p class="settings-hint"><strong>DeepSeek：</strong>国产AI，手机号注册，免费500万tokens。<br><strong>Gemini：</strong>需Google账号，每天免费1500次。</p>
+          </div>
+          <div id="deepseekConfig" class="settings-section">
+            <h4>DeepSeek API 密钥</h4>
             <div class="api-input-group">
-              <input type="password" id="apiKeyInput" placeholder="输入 Gemini API 密钥..." oninput="onAPIKeyChange()">
+              <input type="password" id="deepseekKeyInput" placeholder="输入 DeepSeek API 密钥 (sk-...)" oninput="onAPIKeyChange()">
               <button class="btn-primary" onclick="saveAPIKey()">保存</button>
             </div>
             <div><span class="api-status none" id="apiStatus">未配置</span></div>
-            <p class="settings-hint">免费获取：<a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>（每天免费1500次）</p>
+            <p class="settings-hint">免费获取：<a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek 开放平台</a>（手机号注册即可，新用户送500万tokens）</p>
+          </div>
+          <div id="geminiConfig" class="settings-section" style="display:none;">
+            <h4>Google Gemini API 密钥</h4>
+            <div class="api-input-group">
+              <input type="password" id="geminiKeyInput" placeholder="输入 Gemini API 密钥..." oninput="onAPIKeyChange()">
+              <button class="btn-primary" onclick="saveAPIKey()">保存</button>
+            </div>
+            <div><span class="api-status none" id="geminiStatus">未配置</span></div>
+            <p class="settings-hint">免费获取：<a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>（需Google账号）</p>
           </div>
           <div class="settings-section">
             <h4>及格分数线</h4>
@@ -1115,7 +1132,7 @@ let parentPassword = null;
 let uploadFileData = null;
 let uploadTaskId = null;
 let aiMode = true;
-let aiSettings = { apiKey: '', passThreshold: 70 };
+let aiSettings = { apiKey: '', passThreshold: 70, provider: 'deepseek', deepseekKey: '' };
 let currentGradingTaskId = null;
 
 function loadState(){
@@ -1141,6 +1158,9 @@ if(!state.freezeCards) state.freezeCards = 0;
 if(!state.rejectCounts) state.rejectCounts = {};
 if(!state.qualityGrades) state.qualityGrades = {};
 if(!('mysteryBoxOpened' in state)) state.mysteryBoxOpened = null;
+// Backward compat: ensure provider field exists
+if(!aiSettings.provider) aiSettings.provider = 'deepseek';
+if(!aiSettings.deepseekKey) aiSettings.deepseekKey = '';
 
 function isApproved(taskId){return state.approved[taskId];}
 function isSubmitted(taskId){return state.submissions[taskId] && !state.approved[taskId] && !state.rejected[taskId];}
@@ -1850,10 +1870,10 @@ function submitUpload(){
   closeUploadModal();
   renderToday(); renderReview(); updateScoreBar();
 
-  if(aiMode && aiSettings.apiKey){
+  if(aiMode && getActiveKey()){
     runAIGrading(uploadTaskId);
-  }else if(aiMode && !aiSettings.apiKey){
-    alert('🤖 AI模式已开启但未配置API密钥。请在"设置"中配置Gemini API密钥，或切换到手动审核模式。\n\n当前将以手动模式提交，由家长审核。');
+  }else if(aiMode && !getActiveKey()){
+    alert('🤖 AI模式已开启但未配置API密钥。请在"设置"中配置DeepSeek或Gemini API密钥，或切换到手动审核模式。\n\n当前将以手动模式提交，由家长审核。');
   }else{
     alert('作业已提交！请让爸爸妈妈审核哦~');
   }
@@ -1877,6 +1897,8 @@ function runAIGrading(taskId){
 
   const base64Data=sub.data.split(',')[1];
   const mimeType=sub.data.split(';')[0].split(':')[1]||'image/jpeg';
+  const isDeepSeek = aiSettings.provider === 'deepseek';
+  const apiKey = getActiveKey();
 
   const prompt=`你是一位专业的小学老师，正在批改学生的${subjectName}作业。请根据这张作业照片分析。
 
@@ -1903,34 +1925,67 @@ function runAIGrading(taskId){
 
 如果是抄写类作业（字帖、练字、抄写），只需评判是否完成和书写质量。如果是APP学习/背诵类作业（照片无法直接验证），请检查画面是否显示学习场景。`;
 
-  fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${aiSettings.apiKey}`,{
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      contents:[{parts:[
-        {text:prompt},
-        {inlineData:{mimeType:mimeType,data:base64Data}}
-      ]}],
-      generationConfig:{temperature:0.2,maxOutputTokens:800}
-    })
-  }).then(r=>r.json()).then(data=>{
-    try{
-      const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
-      const jsonMatch=text.match(/\{[\s\S]*\}/);
-      if(!jsonMatch) throw new Error('No JSON found');
-      const result=JSON.parse(jsonMatch[0]);
-      handleAIResult(taskId,result);
-    }catch(e){
-      console.error('AI批改解析失败:',e);
-      document.getElementById('aiGradingTitle').textContent='⚠️ AI批改失败';
-      document.getElementById('aiGradingContent').innerHTML='<p style="color:var(--text-secondary);">AI分析遇到问题，可能是照片不够清晰，或API调用出错。</p><button class="retry-ai-btn" onclick="runAIGrading(\''+taskId+'\')">🔄 重新批改</button>';
-      document.getElementById('aiGradingActions').innerHTML='<button class="btn-secondary" onclick="closeAIGrading()">关闭（转为手动审核）</button>';
-    }
-  }).catch(err=>{
-    console.error('AI批改请求失败:',err);
-    document.getElementById('aiGradingTitle').textContent='⚠️ 网络错误';
-    document.getElementById('aiGradingContent').innerHTML='<p style="color:var(--text-secondary);">网络连接失败，请检查API密钥是否正确，或检查网络。</p><button class="retry-ai-btn" onclick="runAIGrading(\''+taskId+'\')">🔄 重试</button>';
-    document.getElementById('aiGradingActions').innerHTML='<button class="btn-secondary" onclick="closeAIGrading()">关闭（转为手动审核）</button>';
-  });
+  if(isDeepSeek){
+    // DeepSeek API (OpenAI-compatible)
+    fetch('https://api.deepseek.com/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+      body:JSON.stringify({
+        model:'deepseek-chat',
+        messages:[{role:'user',content:[
+          {type:'image_url',image_url:{url:'data:'+mimeType+';base64,'+base64Data}},
+          {type:'text',text:prompt}
+        ]}],
+        max_tokens:2000,
+        temperature:0.1
+      })
+    }).then(r=>r.json()).then(data=>{
+      try{
+        const text=data.choices?.[0]?.message?.content||'';
+        const jsonMatch=text.match(/\{[\s\S]*\}/);
+        if(!jsonMatch) throw new Error('No JSON found');
+        const result=JSON.parse(jsonMatch[0]);
+        handleAIResult(taskId,result);
+      }catch(e){
+        console.error('DeepSeek批改解析失败:',e,data);
+        showAIGradingError(taskId);
+      }
+    }).catch(err=>{
+      console.error('DeepSeek批改请求失败:',err);
+      showAIGradingError(taskId);
+    });
+  } else {
+    // Gemini API
+    fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        contents:[{parts:[
+          {text:prompt},
+          {inlineData:{mimeType:mimeType,data:base64Data}}
+        ]}],
+        generationConfig:{temperature:0.2,maxOutputTokens:800}
+      })
+    }).then(r=>r.json()).then(data=>{
+      try{
+        const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'';
+        const jsonMatch=text.match(/\{[\s\S]*\}/);
+        if(!jsonMatch) throw new Error('No JSON found');
+        const result=JSON.parse(jsonMatch[0]);
+        handleAIResult(taskId,result);
+      }catch(e){
+        console.error('Gemini批改解析失败:',e);
+        showAIGradingError(taskId);
+      }
+    }).catch(err=>{
+      console.error('Gemini批改请求失败:',err);
+      showAIGradingError(taskId);
+    });
+  }
+}
+function showAIGradingError(taskId){
+  document.getElementById('aiGradingTitle').textContent='⚠️ AI批改失败';
+  document.getElementById('aiGradingContent').innerHTML='<p style="color:var(--text-secondary);">AI分析遇到问题，可能是照片不够清晰，或API调用出错。</p><button class="retry-ai-btn" onclick="runAIGrading(\''+taskId+'\')">🔄 重新批改</button>';
+  document.getElementById('aiGradingActions').innerHTML='<button class="btn-secondary" onclick="closeAIGrading()">关闭（转为手动审核）</button>';
 }
 
 function handleAIResult(taskId,result){
@@ -2112,14 +2167,40 @@ function updateModeButtons(){
   if(card) card.style.display=aiMode?'':'none';
 }
 function saveAPIKey(){
-  const key=document.getElementById('apiKeyInput').value.trim();
-  aiSettings.apiKey=key; saveState(); onAPIKeyChange();
+  if(aiSettings.provider==='deepseek'){
+    aiSettings.deepseekKey = document.getElementById('deepseekKeyInput').value.trim();
+  } else {
+    aiSettings.apiKey = document.getElementById('geminiKeyInput').value.trim();
+  }
+  saveState(); onAPIKeyChange();
+  const key = aiSettings.provider==='deepseek' ? aiSettings.deepseekKey : aiSettings.apiKey;
   alert(key?'API密钥已保存！':'API密钥已清空');
 }
 function onAPIKeyChange(){
-  const key=document.getElementById('apiKeyInput').value.trim();
+  const key = aiSettings.provider==='deepseek'
+    ? document.getElementById('deepseekKeyInput').value.trim()
+    : document.getElementById('geminiKeyInput').value.trim();
   const status=document.getElementById('apiStatus');
   if(status){ status.textContent=key?'已配置 ✅':'未配置'; status.className='api-status '+(key?'ok':'none'); }
+  // Also update gemini status
+  const gs=document.getElementById('geminiStatus');
+  if(gs){
+    const gk=document.getElementById('geminiKeyInput').value.trim();
+    gs.textContent=gk?'已配置 ✅':'未配置';
+    gs.className='api-status '+(gk?'ok':'none');
+  }
+}
+function setProvider(prov){
+  aiSettings.provider = prov;
+  document.getElementById('provDeepseek').classList.toggle('active', prov==='deepseek');
+  document.getElementById('provGemini').classList.toggle('active', prov==='gemini');
+  document.getElementById('deepseekConfig').style.display = prov==='deepseek'?'':'none';
+  document.getElementById('geminiConfig').style.display = prov==='gemini'?'':'none';
+  saveState(); onAPIKeyChange();
+}
+function getActiveKey(){
+  if(aiSettings.provider==='deepseek') return aiSettings.deepseekKey||'';
+  return aiSettings.apiKey||'';
 }
 function updateThresholdLabel(){
   const val=document.getElementById('passThreshold').value;
@@ -2498,8 +2579,11 @@ function renderQuotes(){
 // ===================== 初始化 =====================
 function init(){
   // Load settings
-  if(aiSettings.apiKey) document.getElementById('apiKeyInput').value=aiSettings.apiKey;
+  if(aiSettings.apiKey) document.getElementById('geminiKeyInput').value=aiSettings.apiKey;
+  if(aiSettings.deepseekKey) document.getElementById('deepseekKeyInput').value=aiSettings.deepseekKey;
+  if(!aiSettings.provider) aiSettings.provider='deepseek';
   document.getElementById('passThreshold').value=aiSettings.passThreshold;
+  setProvider(aiSettings.provider);
   updateThresholdLabel(); onAPIKeyChange(); updateModeButtons();
 
   randomEncourage();
