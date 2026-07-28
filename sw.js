@@ -1,5 +1,5 @@
 // Service Worker for PWA - 缓存所有文件实现离线访问
-const CACHE_NAME = 'homework-workbench-v2';
+const CACHE_NAME = 'homework-workbench-v3';
 const FILES_TO_CACHE = [
   '.',
   'index.html',
@@ -30,19 +30,35 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// 请求拦截：缓存优先策略
+// 请求拦截：HTML用网络优先，其他资源用缓存优先
 self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      // 有缓存用缓存，同时后台更新
-      const fetchPromise = fetch(event.request).then((response) => {
-        if (response && response.status === 200 && response.type === 'basic') {
+  const url = new URL(event.request.url);
+  // HTML页面：网络优先，确保始终获取最新版本（密钥等JS逻辑在HTML中）
+  if (event.request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        if (response && response.status === 200) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return response;
-      }).catch(() => cached);
-      return cached || fetchPromise;
-    })
-  );
+      }).catch(() => {
+        return caches.match(event.request);
+      })
+    );
+  } else {
+    // 其他资源（图片、manifest等）：缓存优先，后台更新
+    event.respondWith(
+      caches.match(event.request).then((cached) => {
+        const fetchPromise = fetch(event.request).then((response) => {
+          if (response && response.status === 200) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        }).catch(() => cached);
+        return cached || fetchPromise;
+      })
+    );
+  }
 });

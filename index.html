@@ -1665,7 +1665,11 @@ function navigateTo(panel){
   if(panel==='errors'){ errorFilter='all'; updateImportAIButton(); filterErrorsBySubject('all'); }
   if(panel==='achieve') renderAchievements();
   if(panel==='review') renderReview();
-  if(panel==='settings'){ updateThresholdLabel(); onAPIKeyChange(); updateModeButtons(); }
+  if(panel==='settings'){
+    // 每次进入设置页面，从 aiSettings 重新填充密钥输入框（防止缓存导致的显示不同步）
+    reloadSettingsInputs();
+    updateThresholdLabel(); onAPIKeyChange(); updateModeButtons();
+  }
   if(panel==='trends'){ switchTrendTab('overall'); }
   updateScoreBar();
 }
@@ -2456,9 +2460,18 @@ function saveAPIKey(){
   } else {
     aiSettings.apiKey = document.getElementById('geminiKeyInput').value.trim();
   }
+  // 同步刷新状态对象确保一致性
+  state.aiSettings = aiSettings;
   saveState(); onAPIKeyChange();
   const key = aiSettings.provider==='deepseek' ? aiSettings.deepseekKey : aiSettings.apiKey;
   alert(key?'API密钥已保存！':'API密钥已清空');
+}
+function reloadSettingsInputs(){
+  // 从 aiSettings 重新填充密钥输入框（防止缓存导致显示不同步）
+  const dkEl = document.getElementById('deepseekKeyInput');
+  const gkEl = document.getElementById('geminiKeyInput');
+  if(dkEl) dkEl.value = aiSettings.deepseekKey || '';
+  if(gkEl) gkEl.value = aiSettings.apiKey || '';
 }
 function onAPIKeyChange(){
   const key = aiSettings.provider==='deepseek'
@@ -2483,8 +2496,24 @@ function setProvider(prov){
   saveState(); onAPIKeyChange();
 }
 function getActiveKey(){
-  if(aiSettings.provider==='deepseek') return aiSettings.deepseekKey||'';
-  return aiSettings.apiKey||'';
+  // 先读 aiSettings（内存中的值）
+  let key = '';
+  if(aiSettings.provider==='deepseek') key = aiSettings.deepseekKey||'';
+  else key = aiSettings.apiKey||'';
+  // 兜底：如果内存中没有，直接从 localStorage 读取（防止 Service Worker 缓存导致状态不同步）
+  if(!key){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        const s = JSON.parse(raw);
+        if(s.aiSettings){
+          if(aiSettings.provider==='deepseek') key = s.aiSettings.deepseekKey||'';
+          else key = s.aiSettings.apiKey||'';
+        }
+      }
+    } catch(e){}
+  }
+  return key;
 }
 function updateThresholdLabel(){
   const val=document.getElementById('passThreshold').value;
