@@ -1150,7 +1150,7 @@ const homeworkData = {};
   homeworkData[d].push(
     {id:`eng-${d}-1`,subject:'english',text:'英语字帖',points:10},
     {id:`eng-${d}-2`,subject:'english',text:'英语APP半小时',points:10},
-    {id:`eng-${d}-3`,subject:'english',text:'语文阅读理解一篇',points:10}
+    {id:`eng-${d}-3`,subject:'english',text:'英语阅读理解一篇',points:10}
   );
 });
 
@@ -1597,6 +1597,15 @@ function renderTrends(){
 // ===================== 导航 =====================
 let currentPanel = 'dashboard';
 function navigateTo(panel){
+  // Parent-protected panels: require password
+  if(panel==='review' && !parentMode){
+    document.getElementById('passwordModal').classList.add('active');
+    document.getElementById('parentPasswordInput').value='';
+    // Store intended panel to navigate after auth
+    document.getElementById('passwordModal').dataset.intendedPanel = 'review';
+    return;
+  }
+
   currentPanel = panel;
   document.querySelectorAll('.panel-view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.sidebar-link').forEach(l=>l.classList.remove('active'));
@@ -1810,10 +1819,9 @@ function renderReview(){
     if(submissions.length===0){ 
       rl.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>暂无待审核作业</p></div>'; 
     }else{
-      // Batch action bar
+      // Batch action bar (confirm all only, reject must be per-item)
       let html=`<div class="review-batch-bar"><span class="count">📋 ${submissions.length}项待审核</span>
-        <button onclick="batchConfirm()">✅ 全部确认</button>
-        <button class="danger" onclick="batchReject()">❌ 全部退回</button></div>`;
+        <button onclick="batchConfirm()">✅ 全部确认</button></div>`;
 
       html+=submissions.map(s=>{
         let task=null; Object.values(homeworkData).forEach(tasks=>{const t=tasks.find(tt=>tt.id===s.taskId);if(t) task=t;});
@@ -1929,14 +1937,6 @@ function batchConfirm(){
     if(tid) autoApprove(tid);
   });
 }
-
-function batchReject(){
-  const items=document.querySelectorAll('#reviewList .review-item');
-  items.forEach(item=>{
-    const tid=item.dataset.tid;
-    if(tid) autoReject(tid);
-  });
-}
 function showPopup(msg,type){
   const el=document.createElement('div');
   el.className=type==='penalty'?'penalty-popup':'reward-popup';
@@ -1982,7 +1982,9 @@ function showStoredAIResult(taskId,aiRes){
     </div>`;
 
   if(questions.length>0){
-    contentHTML+=`<h4 style="margin:10px 0 6px;font-size:0.9rem;">📝 逐题分析</h4><div class="question-list">`;
+    contentHTML+=`<h4 style="margin:10px 0 6px;font-size:0.9rem;">📝 逐题分析</h4>`;
+    contentHTML+=`<p style="font-size:0.75rem;color:var(--text-secondary);margin:0 0 8px;">❌ 表示做错的题，请重新思考后提交改正</p>`;
+    contentHTML+=`<div class="question-list">`;
     questions.forEach(q=>{
       const cls=q.correct?'correct':'wrong';
       contentHTML+=`<div class="question-card ${cls}">
@@ -1991,7 +1993,7 @@ function showStoredAIResult(taskId,aiRes){
           <div class="q-title">第${q.number||'?'}题：${q.question||''}</div>
           <div class="q-answer">
             <div class="q-answer-item ${q.correct?'good':'bad'}"><span class="label">你的答案</span><br>${q.studentAnswer||'无'}</div>
-            ${!q.correct?`<div class="q-answer-item good"><span class="label">正确答案</span><br>${q.correctAnswer||'?'}</div>`:''}
+            ${!q.correct?`<div class="q-answer-item" style="background:#fff7ed;border:1px dashed #f97316;"><span class="label" style="color:#c2410c;">🔒 正确答案（家长可见）</span><br><span style="color:#9ca3af;">请自己思考改正后再提交</span></div>`:''}
           </div>
         </div></div>`;
     });
@@ -2226,9 +2228,11 @@ function handleAIResult(taskId,result){
     </div>
     <p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;margin:6px 0;">${result.verdict||''}</p>`;
 
-  // Per-question details
+  // Per-question details (student view: no correct answers shown)
   if(questions.length>0){
-    contentHTML+=`<h4 style="margin:10px 0 6px;font-size:0.9rem;">📝 逐题分析</h4><div class="question-list">`;
+    contentHTML+=`<h4 style="margin:10px 0 6px;font-size:0.9rem;">📝 逐题分析</h4>`;
+    contentHTML+=`<p style="font-size:0.75rem;color:var(--text-secondary);margin:0 0 8px;">❌ 表示做错的题，请重新思考后提交改正</p>`;
+    contentHTML+=`<div class="question-list">`;
     questions.forEach(q=>{
       const cls=q.correct?'correct':'wrong';
       const icon=q.correct?'✅':'❌';
@@ -2238,7 +2242,7 @@ function handleAIResult(taskId,result){
           <div class="q-title">第${q.number||'?'}题：${q.question||'未知题目'}</div>
           <div class="q-answer">
             <div class="q-answer-item ${q.correct?'good':'bad'}"><span class="label">你的答案</span><br>${q.studentAnswer||'无'}</div>
-            ${!q.correct?`<div class="q-answer-item good"><span class="label">正确答案</span><br>${q.correctAnswer||'?'}</div>`:''}
+            ${!q.correct?`<div class="q-answer-item" style="background:#fff7ed;border:1px dashed #f97316;"><span class="label" style="color:#c2410c;">🔒 正确答案（家长可见）</span><br><span style="color:#9ca3af;">请自己思考改正后再提交</span></div>`:''}
           </div>
         </div>
       </div>`;
@@ -2246,15 +2250,7 @@ function handleAIResult(taskId,result){
     contentHTML+=`</div>`;
   }
 
-  // Errors summary (for parent review)
-  if(result.errors&&result.errors.length>0){
-    contentHTML+=`<div class="ai-errors-box" style="max-height:120px;"><h4>⚠️ 发现的错题（${result.errors.length}道）</h4>`;
-    result.errors.forEach(e=>{
-      contentHTML+=`<div class="ai-error-item"><strong>题目：</strong>${e.question||'未知'}<br><strong>正确答案：</strong>${e.correctAnswer||'?'}<br><strong>你的答案：</strong>${e.wrongAnswer||'?'}</div>`;
-    });
-    contentHTML+=`</div>`;
-  }
-
+  // Suggestions only (no error answers for student)
   if(result.strengths) contentHTML+=`<div class="ai-feedback">👍 <strong>亮点：</strong>${result.strengths}</div>`;
   if(result.suggestion) contentHTML+=`<div class="ai-feedback">💡 <strong>建议：</strong>${result.suggestion}</div>`;
 
@@ -2366,7 +2362,16 @@ function toggleParentMode(){
 }
 function verifyParentPassword(){
   const input=document.getElementById('parentPasswordInput').value;
-  if(input===parentPassword){ parentMode=true; enterParentMode(); closePasswordModal(); }
+  if(input===parentPassword){
+    parentMode=true; enterParentMode(); closePasswordModal();
+    // Navigate to intended panel if any
+    const modal = document.getElementById('passwordModal');
+    const intendedPanel = modal.dataset.intendedPanel;
+    if(intendedPanel){
+      delete modal.dataset.intendedPanel;
+      navigateTo(intendedPanel);
+    }
+  }
   else alert('密码错误！');
 }
 function closePasswordModal(){ document.getElementById('passwordModal').classList.remove('active'); }
