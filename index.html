@@ -1191,27 +1191,6 @@
 </div>
 
 <script>
-// ★ 版本自检：如果加载的是旧缓存版本，强制清除并刷新
-(function(){
-  var ver = document.querySelector('meta[name="version"]');
-  var expected = 'v3.2-20260728';
-  if(!ver || ver.getAttribute('content') !== expected){
-    // 旧版本缓存 → 清除所有 SW 并强制刷新
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.getRegistrations().then(function(regs){
-        regs.forEach(function(r){ r.unregister(); });
-      });
-    }
-    if('caches' in window){
-      caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); });
-    }
-    localStorage.removeItem('sw_force_reload');
-    // 清除浏览器缓存后强制刷新
-    location.reload(true);
-    return;
-  }
-})();
-
 // ===================== 作业数据 =====================
 const homeworkData = {};
 
@@ -2297,7 +2276,6 @@ function runAIGrading(taskId){
       showAIGradingError(taskId,err.message);
     });
   }
-}
 }
 function showAIGradingError(taskId,errMsg){
   var msg = errMsg || 'AI分析遇到问题，可能是照片不够清晰，或网络连接不稳定。';
