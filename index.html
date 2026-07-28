@@ -486,6 +486,69 @@
   .ai-error-item { background: white; padding: 6px 10px; border-radius: 6px; margin: 4px 0; font-size: 0.8rem; border-left: 3px solid #ef4444; }
   .ai-feedback { background: #eff6ff; padding: 10px; border-radius: 10px; margin: 10px 0; font-size: 0.85rem; color: #1e40af; }
 
+  /* 逐题批改结果 */
+  .question-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+  .question-card {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 10px;
+    border: 1px solid var(--border); background: white;
+  }
+  .question-card.correct { border-left: 4px solid #22c55e; background: #f0fdf4; }
+  .question-card.wrong { border-left: 4px solid #ef4444; background: #fef2f2; }
+  .q-num {
+    width: 28px; height: 28px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-size: 0.8rem;
+    font-weight: 700; flex-shrink: 0;
+  }
+  .q-num.correct { background: #22c55e; color: white; }
+  .q-num.wrong { background: #ef4444; color: white; }
+  .q-body { flex: 1; font-size: 0.82rem; }
+  .q-title { font-weight: 600; margin-bottom: 4px; }
+  .q-answer { display: flex; gap: 12px; flex-wrap: wrap; }
+  .q-answer-item { font-size: 0.78rem; }
+  .q-answer-item .label { color: var(--text-secondary); font-size: 0.7rem; }
+  .q-answer-item.good { color: #166534; }
+  .q-answer-item.bad { color: #991b1b; text-decoration: line-through; }
+  .score-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .score-item {
+    text-align: center; padding: 10px; border-radius: 10px; background: var(--bg);
+  }
+  .score-item .val { font-size: 1.5rem; font-weight: 800; }
+  .score-item .lbl { font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px; }
+  .score-item.pass .val { color: #22c55e; }
+  .score-item.warn .val { color: #f59e0b; }
+  .score-item.fail .val { color: #ef4444; }
+
+  /* 家长审核增强 */
+  .review-item.ai-reviewed { border-color: var(--primary-light); background: #f8fafc; }
+  .review-ai-badge {
+    display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px;
+    border-radius: 12px; font-size: 0.72rem; font-weight: 600;
+  }
+  .review-ai-badge.pass { background: #dcfce7; color: #166534; }
+  .review-ai-badge.warn { background: #fef3c7; color: #92400e; }
+  .review-ai-badge.fail { background: #fee2e2; color: #991b1b; }
+  .review-expand { 
+    font-size: 0.78rem; color: var(--primary); cursor: pointer; 
+    text-decoration: underline; margin-top: 2px; display: inline-block;
+  }
+  .review-questions { display: none; margin-top: 8px; }
+  .review-questions.open { display: flex; flex-direction: column; gap: 4px; }
+  .review-batch-bar {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    background: var(--primary); color: white; border-radius: 10px;
+    margin-bottom: 10px; font-size: 0.85rem; flex-wrap: wrap;
+  }
+  .review-batch-bar .count { font-weight: 700; }
+  .review-batch-bar button {
+    background: white; color: var(--primary); border: none; padding: 6px 14px;
+    border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.82rem;
+  }
+  .review-batch-bar button.danger { background: #fee2e2; color: #991b1b; }
+  .retry-ai-btn {
+    background: var(--primary); color: white; border: none; padding: 6px 12px;
+    border-radius: 6px; cursor: pointer; font-size: 0.8rem; margin-top: 4px;
+  }
+
   /* 设置 */
   .settings-section { margin-bottom: 16px; }
   .settings-section h4 { margin-bottom: 6px; color: var(--primary); font-size: 0.9rem; }
@@ -1027,7 +1090,7 @@
     </div>
     <div class="upload-preview" id="uploadPreview"></div>
     <div style="display:flex;gap:8px;">
-      <button class="btn-primary" id="uploadSubmitBtn" onclick="submitUpload()" disabled>提交审核</button>
+      <button class="btn-primary" id="uploadSubmitBtn" onclick="submitUpload()" disabled>📤 提交AI批改</button>
       <button class="btn-secondary" onclick="closeUploadModal()">取消</button>
     </div>
   </div>
@@ -1143,7 +1206,7 @@ function loadState(){
     if(typeof s.aiMode === 'boolean') aiMode = s.aiMode;
     return s;
   }
-  return {submissions:{},approved:{},rejected:{},scores:{},penalties:{},errors:[],gameHistory:[],firstDate:null,parentPassword:null,aiSettings:null,aiMode:null,freezeCards:0,rejectCounts:{},qualityGrades:{},mysteryBoxOpened:null};
+  return {submissions:{},approved:{},rejected:{},scores:{},penalties:{},errors:[],gameHistory:[],firstDate:null,parentPassword:null,aiSettings:null,aiMode:null,freezeCards:0,rejectCounts:{},qualityGrades:{},mysteryBoxOpened:null,aiResults:{}};
 }
 function saveState(){
   state.aiSettings = aiSettings;
@@ -1158,6 +1221,7 @@ if(!state.freezeCards) state.freezeCards = 0;
 if(!state.rejectCounts) state.rejectCounts = {};
 if(!state.qualityGrades) state.qualityGrades = {};
 if(!('mysteryBoxOpened' in state)) state.mysteryBoxOpened = null;
+if(!state.aiResults) state.aiResults = {};
 // Backward compat: ensure provider field exists
 if(!aiSettings.provider) aiSettings.provider = 'deepseek';
 if(!aiSettings.deepseekKey) aiSettings.deepseekKey = '';
@@ -1660,10 +1724,12 @@ function renderToday(){
     arr.forEach(t=>{
       const status=getTaskStatus(t.id);
       const grade = state.qualityGrades[t.id];
+      const aiRes = state.aiResults[t.id];
       const gradeHTML = grade ? `<span class="quality-grade grade-${grade}">${grade}</span>` : '';
+      const aiScoreHTML = (status==='submitted'&&aiRes) ? `<span style="font-size:0.7rem;color:${aiRes.completionScore>=70?'#22c55e':(aiRes.completionScore>=40?'#f59e0b':'#ef4444')};">AI ${aiRes.completionScore}分</span>` : '';
       html+=`<div class="task-item ${status}" onclick="handleTaskClick('${t.id}')">
         <div class="task-icon">${status==='approved'?'✓':status==='rejected'?'✕':status==='submitted'?'⏳':''}</div>
-        <div class="task-text">${t.text}${gradeHTML}</div>
+        <div class="task-text">${t.text}${gradeHTML} ${aiScoreHTML}</div>
         ${status==='submitted'&&state.submissions[t.id]&&state.submissions[t.id].data
           ?`<img class="task-photo" src="${state.submissions[t.id].data}" onclick="event.stopPropagation();previewPhoto('${state.submissions[t.id].data}')" alt="已提交">`
           :''}
@@ -1739,23 +1805,73 @@ function renderReview(){
   Object.entries(state.submissions).forEach(([taskId,sub])=>{
     if(!state.approved[taskId]&&!state.rejected[taskId]) submissions.push({taskId,...sub});
   });
+
   if(rl){
-    if(submissions.length===0) rl.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>暂无待审核作业</p></div>';
-    else{
-      rl.innerHTML=submissions.map(s=>{
+    if(submissions.length===0){ 
+      rl.innerHTML='<div class="empty-state"><div class="icon">📭</div><p>暂无待审核作业</p></div>'; 
+    }else{
+      // Batch action bar
+      let html=`<div class="review-batch-bar"><span class="count">📋 ${submissions.length}项待审核</span>
+        <button onclick="batchConfirm()">✅ 全部确认</button>
+        <button class="danger" onclick="batchReject()">❌ 全部退回</button></div>`;
+
+      html+=submissions.map(s=>{
         let task=null; Object.values(homeworkData).forEach(tasks=>{const t=tasks.find(tt=>tt.id===s.taskId);if(t) task=t;});
         const dateStr=s.taskId.split('-')[1]+'.'+s.taskId.split('-')[2];
-        return`<div class="review-item">
-          <div class="review-info"><strong>${task?task.text:s.taskId}</strong> · ${dateStr} · +${task?task.points:'?'}分</div>
+        const aiRes=state.aiResults[s.taskId];
+        const grade=state.qualityGrades[s.taskId];
+
+        let aiBadge='';
+        if(aiRes){
+          const bs=aiRes.completionScore;
+          let badgeCls=bs>=70?'pass':(bs>=40?'warn':'fail');
+          let badgeText=bs>=70?`AI ${bs}分`:(bs>=40?`AI ${bs}分⚠️`:`AI ${bs}分❌`);
+          aiBadge=`<span class="review-ai-badge ${badgeCls}">🤖 ${badgeText} ${grade?grade:''}级</span>`;
+        }
+
+        let aiDetail='';
+        if(aiRes){
+          const qs=aiRes.questions||[];
+          const errs=aiRes.errors||[];
+          let detailParts=[];
+          if(aiRes.verdict) detailParts.push(`<div style="font-size:0.8rem;color:var(--text-secondary);">📝 ${aiRes.verdict}</div>`);
+          detailParts.push(`<div style="font-size:0.78rem;">📊 完成度${aiRes.completionScore} · 准确度${aiRes.accuracyScore} · ${aiRes.correctCount||0}/${aiRes.totalQuestions||0}正确</div>`);
+          if(qs.length>0){
+            detailParts.push(`<div class="review-questions" id="rq-${s.taskId}">`+qs.map(q=>{
+              const icon=q.correct?'✅':'❌';
+              const cls=q.correct?'correct':'wrong';
+              return `<div class="question-card ${cls}" style="padding:6px;font-size:0.75rem;">
+                <div class="q-num ${cls}" style="width:22px;height:22px;font-size:0.7rem;">${icon}</div>
+                <div class="q-body"><div class="q-title" style="font-size:0.75rem;">${q.question||'第'+q.number+'题'}</div>
+                ${!q.correct?`<div style="font-size:0.7rem;"><span style="color:#991b1b;text-decoration:line-through;">${q.studentAnswer||'?'}</span> → <span style="color:#166534;">${q.correctAnswer||'?'}</span></div>`:''}
+                </div></div>`;
+            }).join('')+`</div>`);
+          }
+          if(errs.length>0){
+            detailParts.push(`<div style="font-size:0.75rem;color:#991b1b;">⚠️ 发现${errs.length}道错题需改正</div>`);
+          }
+          aiDetail=`<span class="review-expand" onclick="toggleReviewQ('rq-${s.taskId}',this)">📋 查看AI批改详情</span>
+            <div style="margin-top:4px;">${detailParts.join('')}</div>`;
+        }
+
+        return`<div class="review-item ${aiRes?'ai-reviewed':''}" data-tid="${s.taskId}">
+          <div class="review-info">
+            <strong>${task?task.text:s.taskId}</strong> · ${dateStr} · +${task?task.points:'?'}分
+            ${aiBadge}
+            ${grade?`<span class="quality-grade grade-${grade}" style="margin-left:2px;">${grade}</span>`:''}
+          </div>
           ${s.data?`<img class="review-photo" src="${s.data}" onclick="previewPhoto('${s.data}')" alt="作业照片">`:''}
+          ${aiDetail}
           <div class="review-actions">
-            <button class="btn-success" onclick="quickApprove('${s.taskId}','${task?task.points:10}','${dateStr.replace('.','-')}')">✅ 确认</button>
-            <button class="btn-danger" onclick="quickReject('${s.taskId}')">❌ 退回</button>
+            <button class="btn-success" onclick="parentConfirm('${s.taskId}')">✅ 确认通过</button>
+            <button class="btn-danger" onclick="parentReject('${s.taskId}')">❌ 退回</button>
           </div>
         </div>`;
       }).join('');
+      rl.innerHTML=html;
     }
   }
+
   if(rh){
     const history=[];
     Object.keys(state.approved).forEach(tid=>{history.push({taskId:tid,type:'approved'});});
@@ -1764,13 +1880,19 @@ function renderReview(){
     else{
       rh.innerHTML=history.slice(-10).reverse().map(h=>{
         let task=null; Object.values(homeworkData).forEach(tasks=>{const t=tasks.find(tt=>tt.id===h.taskId);if(t) task=t;});
+        const grade=state.qualityGrades[h.taskId];
+        const aiRes=state.aiResults[h.taskId];
+        let extra='';
+        if(aiRes) extra=` · AI评分 ${aiRes.completionScore} · ${grade||''}级`;
+        else if(grade) extra=` · ${grade}级`;
         return`<div class="review-item">
-          <div class="review-info">${h.type==='approved'?'✅':'❌'} ${task?task.text:h.taskId} · ${h.taskId.split('-')[1]}.${h.taskId.split('-')[2]}</div>
+          <div class="review-info">${h.type==='approved'?'✅':'❌'} ${task?task.text:h.taskId} · ${h.taskId.split('-')[1]}.${h.taskId.split('-')[2]}${extra}</div>
         </div>`;
       }).join('');
     }
   }
-  // Review count badge in sidebar
+
+  // Review count badge
   document.querySelectorAll('[data-panel="review"] .badge').forEach(b=>b.remove());
   if(submissions.length>0){
     const reviewLinks=document.querySelectorAll('[data-panel="review"]');
@@ -1783,27 +1905,37 @@ function renderReview(){
   }
 }
 
-function quickApprove(taskId,points,dateStr){
-  state.approved[taskId]=true;
-  if(state.rejected[taskId]) delete state.rejected[taskId];
-  const today=getTodayStr();
-  state.scores[dateStr||today]=(state.scores[dateStr||today]||0)+parseInt(points);
-  if(!state.firstDate) state.firstDate=new Date().toISOString().split('T')[0];
-  const tasks=homeworkData[dateStr||today]||[];
-  if(tasks.length>0&&tasks.every(t=>state.approved[t.id])){
-    state.scores[dateStr||today]=(state.scores[dateStr||today]||0)+30;
-  }
-  saveState();
-  renderToday(); renderReview(); updateScoreBar(); renderMiniAchieves(); checkAchievements();
+function toggleReviewQ(id,el){
+  const box=document.getElementById(id);
+  if(!box) return;
+  box.classList.toggle('open');
+  el.textContent=box.classList.contains('open')?'📋 收起详情':'📋 查看AI批改详情';
 }
-function quickReject(taskId){
-  state.rejected[taskId]=true;
-  const rc=state.rejectCounts[taskId]=(state.rejectCounts[taskId]||0)+1;
-  const penalty=Math.min(rc*3,12);
-  state.penalties[getTodayStr()]=(state.penalties[getTodayStr()]||0)+penalty;
-  if(rc>=2) showPopup('⚠️ 第'+rc+'次退回！扣'+penalty+'分<br><small>仔细看看哪里没做好，加油改进！</small>','penalty');
-  saveState();
-  renderToday(); renderReview(); updateScoreBar();
+
+function parentConfirm(taskId){
+  // Use full autoApprove logic with quality bonuses
+  autoApprove(taskId);
+}
+
+function parentReject(taskId){
+  // Use full autoReject logic
+  autoReject(taskId);
+}
+
+function batchConfirm(){
+  const items=document.querySelectorAll('#reviewList .review-item');
+  items.forEach(item=>{
+    const tid=item.dataset.tid;
+    if(tid) autoApprove(tid);
+  });
+}
+
+function batchReject(){
+  const items=document.querySelectorAll('#reviewList .review-item');
+  items.forEach(item=>{
+    const tid=item.dataset.tid;
+    if(tid) autoReject(tid);
+  });
 }
 function showPopup(msg,type){
   const el=document.createElement('div');
@@ -1819,8 +1951,66 @@ function handleTaskClick(taskId){
   const status=getTaskStatus(taskId);
   if(status==='approved') return;
   if(status==='rejected'){ openUploadModal(taskId); return; }
-  if(status==='submitted'){ previewSubmission(taskId); return; }
+  if(status==='submitted'){
+    const aiRes=state.aiResults[taskId];
+    if(aiRes){
+      // Show AI result modal
+      showStoredAIResult(taskId,aiRes);
+      return;
+    }
+    previewSubmission(taskId); return;
+  }
   openUploadModal(taskId);
+}
+
+function showStoredAIResult(taskId,aiRes){
+  const completionScore=aiRes.completionScore;
+  const accuracyScore=aiRes.accuracyScore;
+  const questions=aiRes.questions||[];
+  const grade=aiRes.qualityGrade||'C';
+  let scoreColor1=completionScore>=70?'pass':(completionScore>=40?'warn':'fail');
+  let scoreColor2=accuracyScore>=70?'pass':(accuracyScore>=40?'warn':'fail');
+
+  let contentHTML=`
+    <div class="score-breakdown">
+      <div class="score-item ${scoreColor1}"><div class="val">${completionScore}</div><div class="lbl">📋 完成度</div></div>
+      <div class="score-item ${scoreColor2}"><div class="val">${accuracyScore}</div><div class="lbl">🎯 准确度</div></div>
+    </div>
+    <div style="text-align:center;margin:8px 0;">
+      <span class="quality-grade grade-${grade}" style="font-size:0.9rem;">品质 ${grade}级</span>
+      ${aiRes.totalQuestions>0?`<span style="margin-left:8px;font-size:0.82rem;">${aiRes.correctCount||0}/${aiRes.totalQuestions} 正确</span>`:''}
+    </div>`;
+
+  if(questions.length>0){
+    contentHTML+=`<h4 style="margin:10px 0 6px;font-size:0.9rem;">📝 逐题分析</h4><div class="question-list">`;
+    questions.forEach(q=>{
+      const cls=q.correct?'correct':'wrong';
+      contentHTML+=`<div class="question-card ${cls}">
+        <div class="q-num ${cls}">${q.correct?'✅':'❌'}</div>
+        <div class="q-body">
+          <div class="q-title">第${q.number||'?'}题：${q.question||''}</div>
+          <div class="q-answer">
+            <div class="q-answer-item ${q.correct?'good':'bad'}"><span class="label">你的答案</span><br>${q.studentAnswer||'无'}</div>
+            ${!q.correct?`<div class="q-answer-item good"><span class="label">正确答案</span><br>${q.correctAnswer||'?'}</div>`:''}
+          </div>
+        </div></div>`;
+    });
+    contentHTML+=`</div>`;
+  }
+
+  if(aiRes.verdict) contentHTML+=`<p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;">${aiRes.verdict}</p>`;
+  if(aiRes.strengths) contentHTML+=`<div class="ai-feedback">👍 ${aiRes.strengths}</div>`;
+  if(aiRes.suggestion) contentHTML+=`<div class="ai-feedback">💡 ${aiRes.suggestion}</div>`;
+
+  document.getElementById('aiGradingTitle').textContent='🤖 AI批改结果（待家长审核）';
+  document.getElementById('aiGradingContent').innerHTML=contentHTML;
+  
+  let actionsHTML=`<button class="btn-secondary" onclick="closeAIGrading()">关闭</button>`;
+  if(aiRes.wrongCount>0||aiRes.errors?.length>0){
+    actionsHTML=`<button class="btn-danger" onclick="resubmitWrong('${taskId}')">🔄 重做错题</button>`+actionsHTML;
+  }
+  document.getElementById('aiGradingActions').innerHTML=actionsHTML;
+  document.getElementById('aiGradingModal').classList.add('active');
 }
 
 function previewSubmission(taskId){
@@ -1875,7 +2065,7 @@ function submitUpload(){
   }else if(aiMode && !getActiveKey()){
     alert('🤖 AI模式已开启但未配置API密钥。请在"设置"中配置DeepSeek或Gemini API密钥，或切换到手动审核模式。\n\n当前将以手动模式提交，由家长审核。');
   }else{
-    alert('作业已提交！请让爸爸妈妈审核哦~');
+    alert('📤 作业已提交！AI正在批改中，批改完成后由家长确认即可~');
   }
 }
 
@@ -1900,30 +2090,29 @@ function runAIGrading(taskId){
   const isDeepSeek = aiSettings.provider === 'deepseek';
   const apiKey = getActiveKey();
 
-  const prompt=`你是一位专业的小学老师，正在批改学生的${subjectName}作业。请根据这张作业照片分析。
+  const prompt=`你是一位专业的小学老师，正在批改学生的${subjectName}作业。请根据这张作业照片逐题分析。
 
 作业内容：${taskText}
 学科：${subjectName}
 
 请严格按以下JSON格式回复（只回复JSON，不要其他文字）：
 {
-  "completionScore": 0-100的数字（完成度评分：页面是否有书写内容、是否写了足够多、是否认真完成），
-  "accuracyScore": 0-100的数字（准确度评分：答案是否正确。如果是抄写类作业，与完成度评分相同），
-  "verdict": "简短评语（30字以内）",
-  "errors": [
-    {"question": "错题内容", "correctAnswer": "正确答案", "wrongAnswer": "学生错误答案"}
+  "completionScore": {"type":"number","desc":"0-100，完成度评分：是否写了足够多、是否认真完成"},
+  "accuracyScore": {"type":"number","desc":"0-100，准确度评分：答案正确率。抄写类作业与完成度相同"},
+  "verdict": {"type":"string","desc":"简短总评（30字以内）"},
+  "questions": [
+    {"number": 1, "question": "题目内容（简短描述）", "correct": true或false, "studentAnswer": "学生的答案", "correctAnswer": "正确答案"}
   ],
-  "suggestion": "改进建议（50字以内）",
-  "strengths": "做得好的地方（30字以内）"
+  "suggestion": {"type":"string","desc":"改进建议（50字以内）"},
+  "strengths": {"type":"string","desc":"做得好的地方（30字以内）"}
 }
 
+重要：questions字段必须逐题列出，每题标注correct为true或false。如果是抄写类作业（字帖、练字），questions可以留空数组。
 评分标准：
 - 90-100: 全部正确且书写工整
 - 70-89: 大部分正确，有小错误
 - 40-69: 有较多错误，需要改进
-- 0-39: 完成度很低或错误很多
-
-如果是抄写类作业（字帖、练字、抄写），只需评判是否完成和书写质量。如果是APP学习/背诵类作业（照片无法直接验证），请检查画面是否显示学习场景。`;
+- 0-39: 完成度很低或错误很多`;
 
   if(isDeepSeek){
     // DeepSeek API (OpenAI-compatible)
@@ -1993,11 +2182,10 @@ function handleAIResult(taskId,result){
   const passThreshold=aiSettings.passThreshold;
   const completionScore=result.completionScore||50;
   const accuracyScore=result.accuracyScore||completionScore;
-
-  let scoreClass,verdictText,verdictClass,action;
-  if(completionScore>=passThreshold){ scoreClass='ai-score-pass'; verdictText='✅ 通过！'; verdictClass='verdict-pass'; action='pass'; }
-  else if(completionScore>=40){ scoreClass='ai-score-review'; verdictText='⚠️ 需复审'; verdictClass='verdict-review'; action='review'; }
-  else{ scoreClass='ai-score-fail'; verdictText='❌ 需重做'; verdictClass='verdict-fail'; action='fail'; }
+  const questions=result.questions||[];
+  const totalQuestions=questions.length;
+  const correctCount=questions.filter(q=>q.correct).length;
+  const wrongCount=totalQuestions-correctCount;
 
   // Quality grade
   let grade='C';
@@ -2009,25 +2197,66 @@ function handleAIResult(taskId,result){
   else grade='F';
   state.qualityGrades[taskId]=grade;
 
-  document.getElementById('aiGradingTitle').textContent='🤖 AI批改结果';
+  // Store full AI result for parent review
+  state.aiResults[taskId]={
+    completionScore, accuracyScore, verdict:result.verdict||'',
+    errors:result.errors||[], suggestion:result.suggestion||'',
+    strengths:result.strengths||'', qualityGrade:grade,
+    questions:questions, totalQuestions, correctCount, wrongCount,
+    timestamp:new Date().toISOString()
+  };
+  saveState();
+
+  // Build score breakdown
+  let scoreColor1=completionScore>=passThreshold?'pass':(completionScore>=40?'warn':'fail');
+  let scoreColor2=accuracyScore>=passThreshold?'pass':(accuracyScore>=40?'warn':'fail');
+
   let contentHTML=`
-    <div class="ai-score-circle ${scoreClass}">${completionScore}<span style="font-size:0.7rem;">分</span></div>
-    <div class="ai-verdict ${verdictClass}">${verdictText} <span class="quality-grade grade-${grade}" style="margin-left:4px;">${grade}级</span></div>
-    <p style="color:var(--text-secondary);font-size:0.85rem;margin:6px 0;">${result.verdict||''}</p>
-    <div class="ai-detail-row"><span>完成度评分</span><span style="font-weight:700;color:var(--primary);">${completionScore}/100</span></div>
-    <div class="ai-detail-row"><span>准确度评分</span><span style="font-weight:700;color:var(--primary);">${accuracyScore}/100</span></div>
-    <div class="ai-detail-row"><span>品质等级</span><span class="quality-grade grade-${grade}">${grade}级</span></div>`;
+    <div class="score-breakdown">
+      <div class="score-item ${scoreColor1}">
+        <div class="val">${completionScore}</div><div class="lbl">📋 完成度</div>
+      </div>
+      <div class="score-item ${scoreColor2}">
+        <div class="val">${accuracyScore}</div><div class="lbl">🎯 准确度</div>
+      </div>
+    </div>
+    <div style="text-align:center;margin:8px 0;">
+      <span class="quality-grade grade-${grade}" style="font-size:0.9rem;">品质 ${grade}级</span>
+      ${totalQuestions>0?`<span style="margin-left:8px;font-size:0.82rem;">${correctCount}/${totalQuestions} 正确</span>`:''}
+    </div>
+    <p style="color:var(--text-secondary);font-size:0.85rem;text-align:center;margin:6px 0;">${result.verdict||''}</p>`;
 
-  if(result.strengths) contentHTML+=`<div class="ai-feedback">👍 <strong>亮点：</strong>${result.strengths}</div>`;
-  if(result.suggestion) contentHTML+=`<div class="ai-feedback">💡 <strong>建议：</strong>${result.suggestion}</div>`;
+  // Per-question details
+  if(questions.length>0){
+    contentHTML+=`<h4 style="margin:10px 0 6px;font-size:0.9rem;">📝 逐题分析</h4><div class="question-list">`;
+    questions.forEach(q=>{
+      const cls=q.correct?'correct':'wrong';
+      const icon=q.correct?'✅':'❌';
+      contentHTML+=`<div class="question-card ${cls}">
+        <div class="q-num ${cls}">${icon}</div>
+        <div class="q-body">
+          <div class="q-title">第${q.number||'?'}题：${q.question||'未知题目'}</div>
+          <div class="q-answer">
+            <div class="q-answer-item ${q.correct?'good':'bad'}"><span class="label">你的答案</span><br>${q.studentAnswer||'无'}</div>
+            ${!q.correct?`<div class="q-answer-item good"><span class="label">正确答案</span><br>${q.correctAnswer||'?'}</div>`:''}
+          </div>
+        </div>
+      </div>`;
+    });
+    contentHTML+=`</div>`;
+  }
 
+  // Errors summary (for parent review)
   if(result.errors&&result.errors.length>0){
-    contentHTML+=`<div class="ai-errors-box"><h4>📝 发现的错题（${result.errors.length}道）</h4>`;
+    contentHTML+=`<div class="ai-errors-box" style="max-height:120px;"><h4>⚠️ 发现的错题（${result.errors.length}道）</h4>`;
     result.errors.forEach(e=>{
       contentHTML+=`<div class="ai-error-item"><strong>题目：</strong>${e.question||'未知'}<br><strong>正确答案：</strong>${e.correctAnswer||'?'}<br><strong>你的答案：</strong>${e.wrongAnswer||'?'}</div>`;
     });
     contentHTML+=`</div>`;
   }
+
+  if(result.strengths) contentHTML+=`<div class="ai-feedback">👍 <strong>亮点：</strong>${result.strengths}</div>`;
+  if(result.suggestion) contentHTML+=`<div class="ai-feedback">💡 <strong>建议：</strong>${result.suggestion}</div>`;
 
   // Penalty/surcharge info
   if(grade==='F'||grade==='D') contentHTML+=`<div class="penalty-banner"><div class="penalty-icon">⚠️</div><div>品质等级 <strong>${grade}</strong>：将扣除 <span class="penalty-amount">${grade==='F'?5:3}</span> 分</div></div>`;
@@ -2036,21 +2265,27 @@ function handleAIResult(taskId,result){
 
   document.getElementById('aiGradingContent').innerHTML=contentHTML;
 
-  let actionsHTML='';
-  if(action==='pass'){
-    actionsHTML=`<button class="btn-success" onclick="autoApprove('${taskId}')">✅ 确认通过</button>`;
-    actionsHTML+=`<button class="btn-danger" onclick="autoReject('${taskId}')">❌ 手动退回</button>`;
-  }else if(action==='review'){
-    actionsHTML=`<button class="btn-success" onclick="autoApprove('${taskId}')">✅ 勉强通过</button>`;
-    actionsHTML+=`<button class="btn-danger" onclick="autoReject('${taskId}')">❌ 退回重做</button>`;
-  }else{
-    actionsHTML=`<button class="btn-danger" onclick="autoReject('${taskId}')">❌ 确认退回</button>`;
-    actionsHTML+=`<button class="btn-success" onclick="autoApprove('${taskId}')">✅ 依然通过</button>`;
+  // Buttons: submit for parent review (student can see results, but parent decides)
+  let actionsHTML=`<button class="btn-primary" onclick="closeAIGrading();renderToday();renderReview();">📋 提交家长审核</button>`;
+  if(wrongCount>0){
+    actionsHTML+=`<button class="btn-danger" onclick="resubmitWrong('${taskId}')">🔄 重做错题</button>`;
   }
-  actionsHTML+=`<button class="btn-secondary" onclick="closeAIGrading()">关闭</button>`;
+  actionsHTML+=`<button class="btn-secondary" onclick="closeAIGrading();renderToday();">关闭</button>`;
   document.getElementById('aiGradingActions').innerHTML=actionsHTML;
 
+  document.getElementById('aiGradingTitle').textContent='🤖 AI批改结果';
+  document.getElementById('aiGradingModal').classList.add('active');
   saveState();
+}
+
+function resubmitWrong(taskId){
+  // Mark for redo and open upload
+  state.rejected[taskId]=true;
+  delete state.aiResults[taskId];
+  saveState();
+  closeAIGrading();
+  renderToday(); renderReview(); updateScoreBar();
+  openUploadModal(taskId);
 }
 
 function autoApprove(taskId){
