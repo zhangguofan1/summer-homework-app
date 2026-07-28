@@ -580,6 +580,122 @@
     .score-bar { gap: 10px; }
     .score-item { padding: 4px 10px; font-size: 0.75rem; }
   }
+  /* ========== AI 智能批改 ========== */
+  .ai-grading-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 400; padding: 20px;
+  }
+  .ai-grading-card {
+    background: var(--card); border-radius: 20px;
+    padding: 30px; max-width: 420px; width: 100%;
+    text-align: center; box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .ai-spinner {
+    width: 60px; height: 60px; margin: 20px auto;
+    border: 5px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-score-circle {
+    width: 100px; height: 100px; border-radius: 50%;
+    margin: 16px auto; display: flex; align-items: center;
+    justify-content: center; font-size: 2rem; font-weight: 800;
+    border: 8px solid;
+    position: relative;
+  }
+  .ai-score-pass { color: #22c55e; border-color: #22c55e; background: #f0fdf4; }
+  .ai-score-fail { color: #ef4444; border-color: #ef4444; background: #fef2f2; }
+  .ai-score-review { color: #f59e0b; border-color: #f59e0b; background: #fffbeb; }
+  .ai-verdict {
+    font-size: 1.2rem; font-weight: 700; margin: 10px 0;
+    padding: 8px 20px; border-radius: 20px; display: inline-block;
+  }
+  .verdict-pass { background: #dcfce7; color: #166534; }
+  .verdict-fail { background: #fee2e2; color: #991b1b; }
+  .verdict-review { background: #fef3c7; color: #92400e; }
+  .ai-detail-row {
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .ai-errors-box {
+    background: #fef2f2; border-radius: 12px;
+    padding: 12px; margin: 12px 0; text-align: left;
+    max-height: 200px; overflow-y: auto;
+  }
+  .ai-errors-box h4 { color: #991b1b; margin-bottom: 8px; }
+  .ai-error-item {
+    background: white; padding: 8px 12px; border-radius: 8px;
+    margin: 6px 0; font-size: 0.85rem;
+    border-left: 3px solid #ef4444;
+  }
+  .ai-feedback {
+    background: #eff6ff; padding: 12px; border-radius: 12px;
+    margin: 12px 0; font-size: 0.9rem; text-align: left;
+    color: #1e40af;
+  }
+  /* 设置面板 */
+  .settings-section { margin-bottom: 20px; }
+  .settings-section h4 { margin-bottom: 8px; color: var(--primary); }
+  .settings-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px; background: var(--bg); border-radius: 10px;
+    margin-bottom: 8px;
+  }
+  .settings-row label { flex: 1; font-size: 0.9rem; }
+  .settings-row input[type="range"] { flex: 2; }
+  .settings-row .range-val {
+    min-width: 50px; text-align: center; font-weight: 700;
+    color: var(--primary);
+  }
+  .api-input-group {
+    display: flex; gap: 8px; margin-bottom: 8px;
+  }
+  .api-input-group input {
+    flex: 1; padding: 10px 14px; border: 2px solid var(--border);
+    border-radius: 10px; font-size: 0.85rem; font-family: monospace;
+    outline: none; transition: border 0.2s;
+  }
+  .api-input-group input:focus { border-color: var(--primary); }
+  .api-status {
+    font-size: 0.8rem; padding: 4px 10px; border-radius: 12px;
+    display: inline-block; font-weight: 600;
+  }
+  .api-status.ok { background: #dcfce7; color: #166534; }
+  .api-status.none { background: #fee2e2; color: #991b1b; }
+  .settings-hint {
+    font-size: 0.75rem; color: var(--text-secondary);
+    margin-top: 4px; line-height: 1.5;
+  }
+  .settings-hint a { color: var(--primary); }
+  /* AI模式切换 */
+  .ai-mode-toggle {
+    display: flex; background: var(--border); border-radius: 12px;
+    overflow: hidden; margin-bottom: 12px;
+  }
+  .ai-mode-btn {
+    flex: 1; padding: 10px; border: none; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600;
+    background: transparent; color: var(--text-secondary);
+    transition: all 0.2s;
+  }
+  .ai-mode-btn.active {
+    background: var(--primary); color: white;
+  }
+  .retry-ai-btn {
+    background: var(--primary-light); color: white;
+    border: none; padding: 8px 20px; border-radius: 20px;
+    font-size: 0.85rem; cursor: pointer; margin-top: 8px;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -605,6 +721,7 @@
   <button class="nav-tab" data-panel="games">游戏奖励</button>
   <button class="nav-tab" data-panel="errors">错题本</button>
   <button class="nav-tab" data-panel="achieve">成就墙</button>
+  <button class="nav-tab" data-panel="settings">设置</button>
 </div>
 
 <div class="container">
@@ -747,6 +864,63 @@
     </div>
   </div>
 
+  <!-- 设置面板 -->
+  <div class="panel" id="panel-settings">
+    <div class="card">
+      <div class="card-title">AI智能批改设置</div>
+      <div class="settings-section">
+        <div class="ai-mode-toggle">
+          <button class="ai-mode-btn active" id="modeAI" onclick="setAIMode('ai')">🤖 AI自动批改</button>
+          <button class="ai-mode-btn" id="modeManual" onclick="setAIMode('manual')">👨‍👩‍👧 家长手动审核</button>
+        </div>
+        <p class="settings-hint">
+          <strong>AI模式：</strong>上传作业照片后，AI自动识别批改并判定是否通过。<br>
+          <strong>手动模式：</strong>照片上传后由家长审核确认。
+        </p>
+      </div>
+    </div>
+    <div class="card" id="aiSettingsCard">
+      <div class="card-title">AI API 配置</div>
+      <div class="settings-section">
+        <h4>API 密钥（Google Gemini）</h4>
+        <div class="api-input-group">
+          <input type="password" id="apiKeyInput" placeholder="输入 Gemini API 密钥..." oninput="onAPIKeyChange()">
+          <button class="btn-primary" onclick="saveAPIKey()" style="padding:8px 16px;">保存</button>
+        </div>
+        <div><span class="api-status none" id="apiStatus">未配置</span></div>
+        <p class="settings-hint">
+          免费获取密钥：访问 <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a> 创建API密钥（免费额度：每天1500次）
+        </p>
+      </div>
+      <div class="settings-section">
+        <h4>及格分数线</h4>
+        <div class="settings-row">
+          <label>自动通过线</label>
+          <input type="range" id="passThreshold" min="50" max="95" value="70" oninput="updateThresholdLabel()">
+          <span class="range-val" id="thresholdLabel">70分</span>
+        </div>
+        <p class="settings-hint">AI评分达到此线自动通过，低于此线但高于40分需家长复审，低于40分自动退回</p>
+      </div>
+      <div class="settings-section">
+        <h4>AI批改能力说明</h4>
+        <p class="settings-hint">
+          ✅ <strong>数学题：</strong>AI可检查计算题答案是否正确，识别错误步骤<br>
+          ✅ <strong>阅读理解：</strong>AI可评估答题完整度和准确性<br>
+          ✅ <strong>抄写/字帖：</strong>AI检查是否完成（页面是否有书写内容）<br>
+          ⚠️ <strong>背诵/APP：</strong>照片无法验证，AI仅检查画面是否显示学习场景<br>
+          📌 所有AI评分仅供参考，遇到不确定的情况会建议家长复审
+        </p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">家长密码修改</div>
+      <div class="api-input-group">
+        <input type="password" id="newPasswordInput" placeholder="新密码（默认1234）">
+        <button class="btn-primary" onclick="changePassword()" style="padding:8px 16px;">修改</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <!-- 日历详情弹窗 -->
@@ -801,6 +975,17 @@
       <button class="btn-secondary" onclick="closePasswordModal()">取消</button>
     </div>
     <p style="font-size:0.75rem;color:var(--text-secondary);margin-top:10px;">默认密码: 1234（可在设置中修改）</p>
+  </div>
+</div>
+
+<!-- AI批改结果弹窗 -->
+<div class="modal-overlay" id="aiGradingModal">
+  <div class="modal" style="max-width:450px;">
+    <h3 id="aiGradingTitle">🤖 AI智能批改中...</h3>
+    <div id="aiGradingContent"></div>
+    <div style="display:flex;gap:10px;margin-top:16px;" id="aiGradingActions">
+      <button class="btn-secondary" onclick="closeAIGrading()">关闭</button>
+    </div>
   </div>
 </div>
 
@@ -860,13 +1045,27 @@ let parentMode = false;
 let parentPassword = null;
 let uploadFileData = null;
 let uploadTaskId = null;
+// AI 批改相关
+let aiMode = true; // true=AI自动批改, false=手动审核
+let aiSettings = { apiKey: '', passThreshold: 70 };
+let currentGradingTaskId = null;
 
 function loadState(){
   const raw=localStorage.getItem(STORAGE_KEY);
-  if(raw) return JSON.parse(raw);
-  return {submissions:{},approved:{},rejected:{},scores:{},errors:[],gameHistory:[],firstDate:null,parentPassword:null};
+  if(raw){
+    const s = JSON.parse(raw);
+    // 加载AI设置
+    if(s.aiSettings) aiSettings = s.aiSettings;
+    if(typeof s.aiMode === 'boolean') aiMode = s.aiMode;
+    return s;
+  }
+  return {submissions:{},approved:{},rejected:{},scores:{},errors:[],gameHistory:[],firstDate:null,parentPassword:null,aiSettings:null,aiMode:null};
 }
-function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state));}
+function saveState(){
+  state.aiSettings = aiSettings;
+  state.aiMode = aiMode;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+}
 
 let state = loadState();
 parentPassword = state.parentPassword || '1234';
@@ -1081,8 +1280,16 @@ function submitUpload(){
   renderToday();
   renderReview();
   updateScoreBar();
-  checkAchievements();
-  alert('作业已提交！请让爸爸妈妈审核哦~');
+
+  // AI模式：自动批改
+  if(aiMode && aiSettings.apiKey){
+    startAIGrading(uploadTaskId);
+  } else if(aiMode && !aiSettings.apiKey){
+    alert('⚠️ AI批改模式已开启，但还没有设置API密钥。\n\n请在"设置"页面配置Google Gemini API密钥，或者切换到"家长手动审核"模式。\n\n本次提交将进入手动审核流程。');
+    renderReview();
+  } else {
+    alert('作业已提交！请让爸爸妈妈审核哦~');
+  }
 }
 
 function showImagePreview(taskId){
@@ -1361,6 +1568,412 @@ function updateScoreBar(){
   document.getElementById('cost-g2048').textContent='12积分/局';
 }
 
+// ===================== AI 智能批改系统 =====================
+function setAIMode(mode){
+  aiMode = (mode === 'ai');
+  document.getElementById('modeAI').classList.toggle('active', aiMode);
+  document.getElementById('modeManual').classList.toggle('active', !aiMode);
+  document.getElementById('aiSettingsCard').style.display = aiMode ? '' : 'none';
+  saveState();
+}
+
+function loadAPISettings(){
+  document.getElementById('apiKeyInput').value = aiSettings.apiKey || '';
+  document.getElementById('passThreshold').value = aiSettings.passThreshold || 70;
+  updateThresholdLabel();
+  onAPIKeyChange();
+  setAIMode(aiMode ? 'ai' : 'manual');
+}
+
+function saveAPIKey(){
+  const key = document.getElementById('apiKeyInput').value.trim();
+  aiSettings.apiKey = key;
+  saveState();
+  onAPIKeyChange();
+  if(key) alert('API密钥已保存！AI批改已就绪。');
+  else alert('API密钥已清空，将使用手动审核模式。');
+}
+
+function onAPIKeyChange(){
+  const key = document.getElementById('apiKeyInput').value.trim();
+  const el = document.getElementById('apiStatus');
+  if(key){
+    el.textContent = '已配置 ✅';
+    el.className = 'api-status ok';
+  } else {
+    el.textContent = '未配置';
+    el.className = 'api-status none';
+  }
+}
+
+function updateThresholdLabel(){
+  const val = document.getElementById('passThreshold').value;
+  document.getElementById('thresholdLabel').textContent = val + '分';
+  aiSettings.passThreshold = parseInt(val);
+  saveState();
+}
+
+function changePassword(){
+  const pw = document.getElementById('newPasswordInput').value.trim();
+  if(!pw){ alert('请输入新密码'); return; }
+  if(pw.length < 3){ alert('密码至少3位'); return; }
+  state.parentPassword = pw;
+  parentPassword = pw;
+  saveState();
+  document.getElementById('newPasswordInput').value = '';
+  alert('密码已修改！');
+}
+
+function closeAIGrading(){
+  document.getElementById('aiGradingModal').classList.remove('active');
+  currentGradingTaskId = null;
+}
+
+function startAIGrading(taskId){
+  currentGradingTaskId = taskId;
+  const sub = state.submissions[taskId];
+  if(!sub || !sub.data) return;
+
+  // 找到任务信息
+  let task = null;
+  Object.values(homeworkData).forEach(tasks => {
+    const t = tasks.find(tt => tt.id === taskId);
+    if(t) task = t;
+  });
+
+  // 显示批改中弹窗
+  document.getElementById('aiGradingTitle').textContent = '🤖 AI智能批改中...';
+  document.getElementById('aiGradingContent').innerHTML = `
+    <div class="ai-spinner"></div>
+    <p style="color:var(--text-secondary);">正在分析作业照片...</p>
+    <p style="font-size:0.8rem;color:var(--text-secondary);">
+      ${task ? task.text : '作业'} · ${task ? ({english:'英语',chinese:'语文',math:'数学'})[task.subject] : ''}
+    </p>
+  `;
+  document.getElementById('aiGradingActions').innerHTML = '<button class="btn-secondary" onclick="closeAIGrading()">取消</button>';
+  document.getElementById('aiGradingModal').classList.add('active');
+
+  // 调用AI
+  callGeminiAPI(sub.data, task).then(result => {
+    handleAIResult(taskId, result);
+  }).catch(err => {
+    console.error('AI grading error:', err);
+    document.getElementById('aiGradingTitle').textContent = '⚠️ AI批改失败';
+    document.getElementById('aiGradingContent').innerHTML = `
+      <p style="color:var(--danger);margin:16px 0;">批改服务暂时不可用</p>
+      <p style="font-size:0.85rem;color:var(--text-secondary);">
+        ${err.message || '网络错误或API密钥无效'}
+      </p>
+      <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:8px;">
+        作业已保存，请让家长手动审核。
+      </p>
+    `;
+    document.getElementById('aiGradingActions').innerHTML = `
+      <button class="retry-ai-btn" onclick="retryAIGrading('${taskId}')">🔄 重试AI批改</button>
+      <button class="btn-secondary" onclick="closeAIGrading()">关闭</button>
+    `;
+    renderReview();
+  });
+}
+
+function retryAIGrading(taskId){
+  closeAIGrading();
+  startAIGrading(taskId);
+}
+
+async function callGeminiAPI(imageData, task){
+  const apiKey = aiSettings.apiKey;
+  if(!apiKey) throw new Error('未配置API密钥');
+
+  // 提取base64数据（去掉data:image/...;base64,前缀）
+  let base64Data = imageData;
+  let mimeType = 'image/jpeg';
+  if(imageData.startsWith('data:')){
+    const match = imageData.match(/^data:([^;]+);base64,(.+)$/);
+    if(match){
+      mimeType = match[1];
+      base64Data = match[2];
+    }
+  }
+
+  const subjectNames = {english:'英语',chinese:'语文',math:'数学'};
+  const subjectName = subjectNames[task?.subject] || '';
+  const taskText = task?.text || '';
+
+  const prompt = `你是一位专业的中国小学老师，正在批改学生的暑假作业。请仔细查看这张作业照片。
+
+【作业信息】
+学科：${subjectName}
+作业内容：${taskText}
+
+【批改任务】
+1. 首先判断照片中是否确实有完成的作业内容（不是空白、不是乱拍）
+2. 根据学科类型进行针对性批改：
+   - 数学题：检查计算过程是否正确，答案是否对
+   - 阅读理解/语文练习：检查答题是否完整、是否答到点上
+   - 抄写/练字：检查页面是否有书写内容，书写是否认真
+   - 背诵/朗读类：由于照片无法验证，只要照片显示学习场景即可
+3. 找出具体的错误（如果有的话），包括错误内容和正确做法
+4. 给出建设性的反馈建议
+
+【评分标准】
+- 完成度评分（0-100）：作业是否完成、书写是否完整
+- 准确度评分（0-100，仅适用于可判分的题目）：答案正确率
+  
+请用以下JSON格式回复（只回复JSON，不要其他内容）：
+{
+  "completion_score": 85,
+  "accuracy_score": 80,
+  "passed": true,
+  "verdict": "完成度较好，有2处计算小错误需要订正",
+  "errors": [
+    {"content": "第3题 24×36=864 应为 864（正确）但过程漏了进位标记", "correct": "竖式计算时要标注进位"},
+    {"content": "第5题 125×8 写成了100，正确答案是1000", "correct": "125×8=1000，注意末尾零的个数"}
+  ],
+  "feedback": "整体完成不错！计算题要注意进位和末尾的零。字迹工整，继续保持！"
+}
+
+注意：
+- 如果照片看不清或不是作业内容，completion_score给0，passed为false
+- passed的判断标准：completion_score>=70且没有严重错误
+- 对于抄写/背诵/APP类作业，accuracy_score可以设为null
+- errors数组列出具体的错题内容
+- 使用中文回复`;
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+  const body = {
+    contents: [{
+      parts: [
+        { text: prompt },
+        { inline_data: { mime_type: mimeType, data: base64Data } }
+      ]
+    }],
+    generationConfig: {
+      temperature: 0.2,
+      maxOutputTokens: 1024
+    }
+  };
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+
+  if(!response.ok){
+    const errData = await response.json().catch(() => ({}));
+    throw new Error(errData.error?.message || `API请求失败 (${response.status})`);
+  }
+
+  const data = await response.json();
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  
+  // 尝试解析JSON
+  const jsonMatch = text.match(/\{[\s\S]*\}/);
+  if(jsonMatch){
+    try {
+      return JSON.parse(jsonMatch[0]);
+    } catch(e) {
+      // 如果不是JSON，尝试手动构造结果
+      return {
+        completion_score: text.includes('完成') ? 70 : 50,
+        accuracy_score: null,
+        passed: true,
+        verdict: text.substring(0, 100),
+        errors: [],
+        feedback: text.substring(0, 200)
+      };
+    }
+  }
+  throw new Error('AI返回格式异常');
+}
+
+function handleAIResult(taskId, result){
+  if(!result || currentGradingTaskId !== taskId) return;
+
+  // 存储AI结果供错题提取使用
+  state._lastAIResult = result;
+
+  const passThreshold = aiSettings.passThreshold;
+  const completionScore = result.completion_score || 0;
+  const accuracyScore = result.accuracy_score;
+  const passed = result.passed !== false && completionScore >= passThreshold;
+
+  // 构建结果显示
+  let scoreClass, verdictClass;
+  let verdictText;
+  if(passed){
+    scoreClass = 'ai-score-pass';
+    verdictClass = 'verdict-pass';
+    verdictText = '✅ 批改通过！';
+  } else if(completionScore >= 40){
+    scoreClass = 'ai-score-review';
+    verdictClass = 'verdict-review';
+    verdictText = '⚠️ 建议家长复审';
+  } else {
+    scoreClass = 'ai-score-fail';
+    verdictClass = 'verdict-fail';
+    verdictText = '❌ 需要重做';
+  }
+
+  const subjects = {english:'英语',chinese:'语文',math:'数学'};
+  let task = null;
+  Object.values(homeworkData).forEach(tasks => {
+    const t = tasks.find(tt => tt.id === taskId);
+    if(t) task = t;
+  });
+
+  document.getElementById('aiGradingTitle').textContent = '🤖 AI批改结果';
+  
+  let contentHTML = `
+    <div class="ai-score-circle ${scoreClass}">${completionScore}<span style="font-size:0.8rem;">分</span></div>
+    <div class="ai-verdict ${verdictClass}">${verdictText}</div>
+    <p style="color:var(--text-secondary);font-size:0.9rem;margin:8px 0;">${result.verdict || ''}</p>
+    <div class="ai-detail-row">
+      <span>完成度评分</span>
+      <span style="font-weight:700;color:var(--primary);">${completionScore}/100</span>
+    </div>`;
+
+  if(accuracyScore !== null && accuracyScore !== undefined){
+    contentHTML += `
+    <div class="ai-detail-row">
+      <span>准确度评分</span>
+      <span style="font-weight:700;color:var(--info);">${accuracyScore}/100</span>
+    </div>`;
+  }
+
+  contentHTML += `
+    <div class="ai-detail-row">
+      <span>判定标准</span>
+      <span style="font-size:0.8rem;color:var(--text-secondary);">≥${passThreshold}分自动通过</span>
+    </div>`;
+
+  // 错题
+  if(result.errors && result.errors.length > 0){
+    contentHTML += `<div class="ai-errors-box">
+      <h4>📝 AI发现的错题 (${result.errors.length}处)</h4>`;
+    result.errors.forEach(e => {
+      contentHTML += `<div class="ai-error-item">
+        <div style="color:#991b1b;">📌 ${e.content}</div>
+        <div style="color:#166534;margin-top:4px;">✅ ${e.correct}</div>
+      </div>`;
+    });
+    contentHTML += `</div>`;
+  }
+
+  // 反馈
+  if(result.feedback){
+    contentHTML += `<div class="ai-feedback">💡 <strong>AI建议：</strong>${result.feedback}</div>`;
+  }
+
+  document.getElementById('aiGradingContent').innerHTML = contentHTML;
+
+  // 操作按钮
+  let actionsHTML = '';
+  if(passed){
+    actionsHTML += `<button class="btn-success" onclick="autoApprove('${taskId}')" style="flex:1;">✅ 确认通过 (+${task?.points||10}分)</button>`;
+    actionsHTML += `<button class="btn-secondary" onclick="closeAIGrading()">关闭</button>`;
+  } else if(completionScore >= 40){
+    actionsHTML += `<button class="btn-primary" onclick="autoApprove('${taskId}')" style="flex:1;">✅ 还是通过 (+${task?.points||10}分)</button>`;
+    actionsHTML += `<button class="btn-danger" onclick="autoReject('${taskId}')" style="flex:1;">❌ 需要重做</button>`;
+  } else {
+    actionsHTML += `<button class="btn-danger" onclick="autoReject('${taskId}')" style="flex:1;">❌ 确认重做</button>`;
+    actionsHTML += `<button class="btn-primary" onclick="autoApprove('${taskId}')">还是通过</button>`;
+  }
+  actionsHTML += `<button class="retry-ai-btn" onclick="retryAIGrading('${taskId}')">🔄 重新批改</button>`;
+
+  document.getElementById('aiGradingActions').innerHTML = actionsHTML;
+
+  // 如果通过，自动确认
+  if(passed){
+    setTimeout(() => {
+      if(currentGradingTaskId === taskId && document.getElementById('aiGradingModal').classList.contains('active')){
+        autoApprove(taskId);
+      }
+    }, 2000);
+  }
+}
+
+function autoApprove(taskId){
+  const today = getTodayStr();
+  let task = null;
+  Object.values(homeworkData).forEach(tasks => {
+    const t = tasks.find(tt => tt.id === taskId);
+    if(t) task = t;
+  });
+  const pts = task ? task.points : 10;
+  state.approved[taskId] = true;
+  if(state.rejected[taskId]) delete state.rejected[taskId];
+  state.scores[today] = (state.scores[today] || 0) + pts;
+  if(!state.firstDate) state.firstDate = new Date().toISOString().split('T')[0];
+  // 每日完成奖励
+  const tasks = homeworkData[today] || [];
+  if(tasks.length > 0 && tasks.every(t => state.approved[t.id])){
+    state.scores[today] = (state.scores[today] || 0) + 30;
+  }
+  // 自动提取错题到错题本
+  autoExtractErrors(taskId, task);
+  saveState();
+  closeAIGrading();
+  renderToday();
+  renderReview();
+  renderErrors();
+  renderAnalysis();
+  updateScoreBar();
+  checkAchievements();
+}
+
+function autoReject(taskId){
+  state.rejected[taskId] = true;
+  saveState();
+  closeAIGrading();
+  renderToday();
+  renderReview();
+}
+
+function autoExtractErrors(taskId, task){
+  // 从AI结果中自动提取错题到错题本
+  if(!state._lastAIResult || !state._lastAIResult.errors) return;
+  const result = state._lastAIResult;
+  if(!result.errors || result.errors.length === 0) return;
+  
+  const subjectMap = {english:'英语',chinese:'语文',math:'数学'};
+  const subject = task ? (subjectMap[task.subject] || '') : '';
+
+  let addedCount = 0;
+  result.errors.forEach(e => {
+    // 检查是否已存在相同的错题
+    const exists = state.errors.some(err =>
+      err.question === e.content && err.date === new Date().toLocaleDateString('zh-CN')
+    );
+    if(!exists){
+      state.errors.push({
+        id: Date.now() + Math.random(),
+        subject: task?.subject || 'math',
+        question: e.content,
+        answer: e.correct,
+        wrong: '',
+        tags: ['AI自动识别', subject],
+        analysis: result.feedback || '',
+        date: new Date().toLocaleDateString('zh-CN'),
+        fromAI: true,
+        taskId: taskId
+      });
+      addedCount++;
+    }
+  });
+
+  if(addedCount > 0){
+    state.scores[getTodayStr()] = (state.scores[getTodayStr()] || 0) + (addedCount * 5);
+    setTimeout(() => {
+      alert(`📝 AI已将 ${addedCount} 道错题自动录入错题本！+${addedCount*5}积分`);
+    }, 500);
+  }
+  // 清除临时AI结果
+  delete state._lastAIResult;
+}
+
 // ===================== 日历 =====================
 let currentMonth=6,currentYear=2026;
 function renderCalendar(){
@@ -1564,7 +2177,7 @@ function renderErrors(){
   if(state.errors.length===0){container.innerHTML='<p style="color:var(--text-secondary);text-align:center;">还没有错题记录</p>';return;}
   const subjects={math:'数学',chinese:'语文',english:'英语'};
   container.innerHTML=state.errors.slice().reverse().map(e=>`<div class="error-item">
-    <div class="error-subject">${subjects[e.subject]} · ${e.date}</div>
+    <div class="error-subject">${subjects[e.subject]} · ${e.date} ${e.fromAI?'<span style="background:#e0e7ff;color:#4338ca;padding:2px 8px;border-radius:10px;font-size:0.7rem;">🤖 AI识别</span>':''}</div>
     <div class="error-question">题目：${e.question}</div>
     <div style="font-size:0.85rem;color:var(--text-secondary);">
       正确答案：<span style="color:var(--success);font-weight:600;">${e.answer}</span>
@@ -1660,6 +2273,7 @@ document.querySelectorAll('.nav-tab').forEach(tab=>{
     if(tab.dataset.panel==='review') renderReview();
     if(tab.dataset.panel==='today') renderToday();
     if(tab.dataset.panel==='achieve') renderAchievements();
+    if(tab.dataset.panel==='settings') loadAPISettings();
   });
 });
 
@@ -1674,6 +2288,8 @@ function init(){
   renderQuotes();
   updateScoreBar();
   renderReview();
+  // 加载AI设置
+  loadAPISettings();
   // Hide review tab initially
   document.querySelectorAll('.nav-tab[data-panel="review"]').forEach(t=>t.style.display='none');
 }
