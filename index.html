@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="暑假作业工作台">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#4f46e5">
+<meta name="description" content="暑假作业打卡、积分、游戏、成长一站式工作台">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<title>暑假作业进阶工作台</title>
+<style>
+  :root {
+    --primary: #4f46e5;
+    --primary-light: #818cf8;
+    --success: #22c55e;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #3b82f6;
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-secondary: #64748b;
+    --border: #e2e8f0;
+    --radius: 16px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  .app-header {
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    color: white;
+    padding: 20px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+  }
+  .app-header h1 { font-size: 1.6rem; margin-bottom: 4px; }
+  .app-header p { opacity: 0.9; font-size: 0.85rem; }
+  .score-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .score-item {
+    background: rgba(255,255,255,0.2);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .score-item .value { font-weight: bold; font-size: 1.1rem; }
+
+  .nav-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 85px;
+    z-index: 99;
+    flex-wrap: wrap;
+  }
+  .nav-tab {
+    padding: 10px 20px;
+    border-radius: 24px;
+    border: none;
+    background: var(--bg);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .nav-tab:hover { background: #e0e7ff; color: var(--primary); }
+  .nav-tab.active { background: var(--primary); color: white; box-shadow: var(--shadow); }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+  .panel { display: none; animation: fadeIn 0.4s; }
+  .panel.active { display: block; }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(10px);} to { opacity:1; transform: translateY(0);} }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .card-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Today Panel */
+  .date-header {
+    text-align: center;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: var(--primary);
+  }
+  .subject-group { margin-bottom: 18px; }
+  .subject-label {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 10px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    display: inline-block;
+  }
+  .subject-english { background: #dbeafe; color: #1e40af; }
+  .subject-chinese { background: #dcfce7; color: #166534; }
+  .subject-math { background: #fef3c7; color: #92400e; }
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .task-item:hover { border-color: var(--primary-light); }
+  .task-item.done { background: #f0fdf4; border-color: var(--success); }
+  .task-item.done .task-text { text-decoration: line-through; color: var(--text-secondary); }
+  .task-checkbox {
+    width: 24px; height: 24px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .task-item.done .task-checkbox {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+  }
+  .task-text { flex: 1; font-size: 0.95rem; }
+  .task-points {
+    font-size: 0.8rem;
+    color: var(--warning);
+    font-weight: 600;
+    background: #fffbeb;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .task-item.done .task-points { color: var(--success); background: #f0fdf4; }
+
+  .progress-ring-container {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .progress-ring-item { text-align: center; }
+  .progress-ring-item svg { transform: rotate(-90deg); }
+  .progress-ring-item .ring-label { margin-top: 8px; font-size: 0.85rem; color: var(--text-secondary); }
+  .progress-ring-item .ring-value { font-weight: bold; font-size: 1.1rem; }
+
+  .encourage-box {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    text-align: center;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--warning);
+  }
+  .encourage-box p { font-size: 1rem; color: #78350f; font-weight: 500; }
+  .encourage-box .author { font-size: 0.8rem; color: #92400e; margin-top: 6px; }
+
+  /* Calendar */
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+  }
+  .cal-header {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    padding: 8px 0;
+  }
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    position: relative;
+    min-height: 70px;
+  }
+  .cal-day:hover { border-color: var(--primary-light); }
+  .cal-day.has-task { background: #eef2ff; border-color: #c7d2fe; }
+  .cal-day.all-done { background: #dcfce7; border-color: #86efac; }
+  .cal-day .day-num { font-weight: 600; font-size: 1rem; }
+  .cal-day .day-dots { display: flex; gap: 3px; margin-top: 4px; }
+  .cal-day .day-dot { width: 6px; height: 6px; border-radius: 50%; }
+  .cal-day .day-dot.eng { background: #3b82f6; }
+  .cal-day .day-dot.chn { background: #22c55e; }
+  .cal-day .day-dot.mat { background: #f59e0b; }
+  .cal-day .done-badge {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 16px; height: 16px;
+    background: var(--success);
+    color: white;
+    border-radius: 50%;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .month-selector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .month-selector button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  .month-selector span { font-size: 1.2rem; font-weight: 600; }
+
+  /* Games */
+  .game-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+  }
+  .game-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    border: 2px solid var(--border);
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: center;
+  }
+  .game-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .game-card .game-icon { font-size: 3rem; margin-bottom: 10px; }
+  .game-card h3 { margin-bottom: 6px; }
+  .game-card p { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px; }
+  .game-card .cost {
+    display: inline-block;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .game-area {
+    display: none;
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-top: 16px;
+    border: 2px solid var(--primary-light);
+  }
+  .game-area.active { display: block; }
+  .game-timer {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--danger);
+    margin-bottom: 12px;
+  }
+
+  /* Memory Game */
+  .memory-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    max-width: 360px;
+    margin: 0 auto;
+  }
+  .memory-card {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, var(--primary), #7c3aed);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    user-select: none;
+    color: white;
+    border: none;
+  }
+  .memory-card.flipped { background: var(--card); border: 2px solid var(--primary); color: var(--text); }
+  .memory-card.matched { background: var(--success); color: white; cursor: default; }
+
+  /* 2048 Game */
+  .g2048-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 340px;
+    margin: 0 auto;
+    background: #bbada0;
+    padding: 8px;
+    border-radius: 8px;
+  }
+  .g2048-cell {
+    aspect-ratio: 1;
+    background: rgba(238,228,218,0.35);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.3rem;
+    transition: all 0.15s;
+  }
+  .g2048-cell[data-val="2"] { background: #eee4da; color: #776e65; }
+  .g2048-cell[data-val="4"] { background: #ede0c8; color: #776e65; }
+  .g2048-cell[data-val="8"] { background: #f2b179; color: #f9f6f2; }
+  .g2048-cell[data-val="16"] { background: #f59563; color: #f9f6f2; }
+  .g2048-cell[data-val="32"] { background: #f67c5f; color: #f9f6f2; }
+  .g2048-cell[data-val="64"] { background: #f65e3b; color: #f9f6f2; }
+  .g2048-cell[data-val="128"] { background: #edcf72; color: #f9f6f2; font-size: 1.1rem; }
+  .g2048-cell[data-val="256"] { background: #edcc61; color: #f9f6f2; font-size: 1.1rem; }
+
+  /* Number Puzzle */
+  .puzzle-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  .puzzle-cell {
+    aspect-ratio: 1;
+    background: var(--primary);
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .puzzle-cell.empty { background: transparent; cursor: default; }
+
+  /* Error Book */
+  .error-form {
+    display: grid;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .error-form input, .error-form textarea, .error-form select {
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    font-family: inherit;
+  }
+  .error-form textarea { min-height: 80px; resize: vertical; }
+  .error-form button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .tag-input { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .tag-chip {
+    background: #e0e7ff;
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .tag-chip.selected { border-color: var(--primary); background: var(--primary); color: white; }
+  .error-list { display: grid; gap: 12px; }
+  .error-item {
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 14px;
+    border-left: 4px solid var(--danger);
+  }
+  .error-item .error-subject { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 4px; }
+  .error-item .error-question { font-weight: 600; margin-bottom: 6px; }
+  .error-item .error-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .error-item .error-tag {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.75rem;
+  }
+  .analysis-box {
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .analysis-box h4 { margin-bottom: 10px; color: #1e3a5f; }
+  .weak-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 20px;
+    margin: 4px;
+    font-size: 0.85rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  }
+  .weak-tag .count { background: var(--danger); color: white; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; }
+
+  /* Achievements */
+  .achieve-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .achieve-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+    border: 2px solid var(--border);
+    transition: all 0.3s;
+  }
+  .achieve-item.unlocked { border-color: var(--warning); background: linear-gradient(135deg, #fef3c7, #fffbeb); }
+  .achieve-item .achieve-icon { font-size: 2.5rem; margin-bottom: 8px; filter: grayscale(1); opacity: 0.5; transition: all 0.3s; }
+  .achieve-item.unlocked .achieve-icon { filter: grayscale(0); opacity: 1; }
+  .achieve-item h4 { font-size: 0.9rem; margin-bottom: 4px; }
+  .achieve-item p { font-size: 0.75rem; color: var(--text-secondary); }
+
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  .btn-primary:hover { background: #4338ca; }
+  .btn-secondary {
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.95rem;
+  }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    padding: 20px;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 24px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+  }
+  .modal h3 { margin-bottom: 16px; }
+  .modal-close {
+    float: right;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+
+  .streak-flame {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: #92400e;
+    font-weight: 600;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+  }
+  .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+
+  @media (max-width: 600px) {
+    .app-header h1 { font-size: 1.2rem; }
+    .nav-tab { padding: 8px 14px; font-size: 0.8rem; }
+    .memory-grid { max-width: 300px; }
+    .g2048-grid { max-width: 280px; }
+    .puzzle-grid { max-width: 240px; }
+    .calendar-grid { gap: 3px; }
+    .cal-day { min-height: 50px; font-size: 0.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <h1>暑假作业进阶工作台</h1>
+  <p>打卡 · 积分 · 游戏 · 成长</p>
+  <div class="score-bar">
+    <div class="score-item"><span>总积分:</span><span class="value" id="totalScore">0</span></div>
+    <div class="score-item"><span>今日:</span><span class="value" id="todayScore">0</span></div>
+    <div class="score-item"><span>连续打卡:</span><span class="value" id="streakDays">0</span>天</div>
+    <div class="score-item streak-flame" id="streakBadge" style="display:none;">连续打卡中!</div>
+  </div>
+</div>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" data-panel="today">今日任务</button>
+  <button class="nav-tab" data-panel="calendar">日历视图</button>
+  <button class="nav-tab" data-panel="games">游戏奖励</button>
+  <button class="nav-tab" data-panel="errors">错题本</button>
+  <button class="nav-tab" data-panel="achieve">成就墙</button>
+</div>
+
+<div class="container">
+
+  <!-- 今日任务 -->
+  <div class="panel active" id="panel-today">
+    <div class="encourage-box" id="encourageBox">
+      <p id="encourageText">"每一天的努力，都是在为未来的自己铺路！"</p>
+      <div class="author">—— 加油，小小学习家！</div>
+    </div>
+    <div class="date-header" id="todayDate"></div>
+    <div id="todayTasks"></div>
+    <div class="card" id="todaySummary" style="display:none;">
+      <div class="card-title">今日完成度</div>
+      <div class="progress-ring-container" id="todayRings"></div>
+    </div>
+  </div>
+
+  <!-- 日历视图 -->
+  <div class="panel" id="panel-calendar">
+    <div class="card">
+      <div class="month-selector">
+        <button onclick="changeMonth(-1)">&#9664;</button>
+        <span id="monthLabel">2026年7月</span>
+        <button onclick="changeMonth(1)">&#9654;</button>
+      </div>
+      <div class="calendar-grid" id="calendarGrid"></div>
+    </div>
+  </div>
+
+  <!-- 游戏奖励 -->
+  <div class="panel" id="panel-games">
+    <div class="card">
+      <div class="card-title">用积分兑换游戏时间</div>
+      <p style="color:var(--text-secondary);margin-bottom:12px;">完成作业获得积分，积分可兑换益智小游戏！每局游戏限时5分钟，到时间会提醒，不影响后续学习哦~</p>
+      <div class="game-cards">
+        <div class="game-card" onclick="startGame('memory')">
+          <div class="game-icon">🧠</div>
+          <h3>记忆翻牌</h3>
+          <p>锻炼记忆力与专注力</p>
+          <span class="cost">20积分/局</span>
+        </div>
+        <div class="game-card" onclick="startGame('puzzle')">
+          <div class="game-icon">🔢</div>
+          <h3>数字华容道</h3>
+          <p>锻炼逻辑思维与推理</p>
+          <span class="cost">30积分/局</span>
+        </div>
+        <div class="game-card" onclick="startGame('g2048')">
+          <div class="game-icon">🎯</div>
+          <h3>2048挑战</h3>
+          <p>锻炼数字敏感度与策略</p>
+          <span class="cost">25积分/局</span>
+        </div>
+      </div>
+    </div>
+    <div class="game-area" id="gameArea">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <h3 id="gameTitle">游戏</h3>
+        <div class="game-timer" id="gameTimer">05:00</div>
+      </div>
+      <div id="gameBoard"></div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="btn-secondary" onclick="endGame()">结束游戏</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 错题本 -->
+  <div class="panel" id="panel-errors">
+    <div class="card">
+      <div class="card-title">添加错题</div>
+      <div class="error-form">
+        <select id="errSubject">
+          <option value="math">数学</option>
+          <option value="chinese">语文</option>
+          <option value="english">英语</option>
+        </select>
+        <input type="text" id="errQuestion" placeholder="题目内容（例如：36 x 25 = ?）">
+        <input type="text" id="errAnswer" placeholder="正确答案">
+        <input type="text" id="errWrong" placeholder="孩子写的错误答案">
+        <div>
+          <div style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:6px;">知识点标签（点击选择）：</div>
+          <div class="tag-input" id="tagInput">
+            <span class="tag-chip" data-tag="乘法">乘法</span>
+            <span class="tag-chip" data-tag="除法">除法</span>
+            <span class="tag-chip" data-tag="加减法">加减法</span>
+            <span class="tag-chip" data-tag="应用题">应用题</span>
+            <span class="tag-chip" data-tag="背诵">背诵</span>
+            <span class="tag-chip" data-tag="阅读理解">阅读理解</span>
+            <span class="tag-chip" data-tag="字词">字词</span>
+            <span class="tag-chip" data-tag="语法">语法</span>
+            <span class="tag-chip" data-tag="单位换算">单位换算</span>
+            <span class="tag-chip" data-tag="图形">图形</span>
+          </div>
+        </div>
+        <textarea id="errAnalysis" placeholder="分析：这道题错在哪里？哪个知识点没掌握？（可选）"></textarea>
+        <button onclick="addError()">添加错题</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">薄弱知识点分析</div>
+      <div class="analysis-box" id="analysisBox">
+        <p style="color:var(--text-secondary);">还没有录入错题，开始记录第一道错题吧！</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">错题列表</div>
+      <div class="error-list" id="errorList"></div>
+    </div>
+  </div>
+
+  <!-- 成就墙 -->
+  <div class="panel" id="panel-achieve">
+    <div class="card">
+      <div class="card-title">成就徽章</div>
+      <div class="achieve-grid" id="achieveGrid"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">学习寄语</div>
+      <div id="quotesList"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 日历详情弹窗 -->
+<div class="modal-overlay" id="dayModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <h3 id="modalDate">日期</h3>
+    <div id="modalTasks"></div>
+  </div>
+</div>
+
+<script>
+// ===================== 作业数据 =====================
+const homeworkData = {};
+
+// 英语作业 7.25-7.31, 8.12-8.18
+const englishDates = ['7.25','7.26','7.27','7.28','7.29','7.30','7.31','8.12','8.13','8.14','8.15','8.16','8.17','8.18'];
+englishDates.forEach(d => {
+  if (!homeworkData[d]) homeworkData[d] = [];
+  homeworkData[d].push(
+    { id: `eng-${d}-1`, subject: 'english', text: '英语字帖', points: 5 },
+    { id: `eng-${d}-2`, subject: 'english', text: '英语APP半小时', points: 5 },
+    { id: `eng-${d}-3`, subject: 'english', text: '语文阅读理解一篇', points: 5 }
+  );
+});
+
+// 语文作业 8.10-8.14, 8.17-8.21
+const chineseData = {
+  '8.10': ['每日诵读一','背诵《观潮》3-4自然段','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.11': ['每日诵读二','背诵《走月亮》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.12': ['每日诵读三','背诵《花牛歌》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.13': ['每日诵读四','背诵《繁星》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.14': ['每日诵读五','背诵《王戎不取道旁李》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.17': ['每日诵读一','背诵《观潮》3-4自然段','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.18': ['每日诵读二','背诵《走月亮》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.19': ['每日诵读三','背诵《观潮》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.20': ['每日诵读四','背诵《精卫填海》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+  '8.21': ['每日诵读五','背诵《王戎不取道旁李》','自选或阅读每日一练(1篇)','字帖一篇','日记一篇'],
+};
+Object.entries(chineseData).forEach(([d, tasks]) => {
+  if (!homeworkData[d]) homeworkData[d] = [];
+  tasks.forEach((t, i) => {
+    homeworkData[d].push({ id: `chn-${d}-${i}`, subject: 'chinese', text: t, points: 5 });
+  });
+});
+
+// 数学作业 8.10-8.14, 8.17-8.21
+const mathData = {
+  '8.10': ['例题1《举一反三》A版P124','计算练习（多位数乘法）'],
+  '8.11': ['例题2《举一反三》A版','计算练习（多位数乘法）'],
+  '8.12': ['例题3《举一反三》A版P126','计算练习（多位数乘法）'],
+  '8.13': ['例题4《举一反三》A版P126','计算练习（多位数乘法）'],
+  '8.14': ['例题5《举一反三》A版P127习题','计算练习（多位数乘法）'],
+  '8.17': ['例题1《举一反三》A版P129','计算练习（多位数乘法）'],
+  '8.18': ['例题2《举一反三》A版','计算练习（多位数乘法）'],
+  '8.19': ['例题3《举一反三》A版P131','计算练习（多位数乘法）'],
+  '8.20': ['例题4《举一反三》A版P131','计算练习（多位数乘法）'],
+  '8.21': ['例题5《举一反三》A版P132习题','计算练习（多位数乘法）'],
+};
+Object.entries(mathData).forEach(([d, tasks]) => {
+  if (!homeworkData[d]) homeworkData[d] = [];
+  tasks.forEach((t, i) => {
+    homeworkData[d].push({ id: `mat-${d}-${i}`, subject: 'math', text: t, points: i === 0 ? 10 : 5 });
+  });
+});
+
+// ===================== 状态管理 =====================
+const STORAGE_KEY = 'homeworkWorkbench_v1';
+
+function loadState() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (raw) return JSON.parse(raw);
+  return { completed: {}, scores: {}, errors: [], gameHistory: [], firstDate: null };
+}
+
+function saveState(state) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+let state = loadState();
+
+function getTodayStr() {
+  const now = new Date();
+  const m = now.getMonth() + 1;
+  const d = now.getDate();
+  return `${m}.${d}`;
+}
+
+function normalizeDate(dateStr) {
+  const parts = dateStr.split('.');
+  return `${parseInt(parts[0])}.${parseInt(parts[1])}`;
+}
+
+// ===================== 鼓励语录 =====================
+const encourages = [
+  { text: '"每天进步一点点，积少成多，你会发现自己越来越棒！"', author: '—— 坚持就是胜利！' },
+  { text: '"学习就像种树，今天浇水，明天发芽，后天就会长成大树！"', author: '—— 耐心等待花开' },
+  { text: '"勇敢面对错题，每一道错题都是通往成功的阶梯！"', author: '—— 失败是成功之母' },
+  { text: '"你的努力，爸爸妈妈都看在眼里，你真的很棒！"', author: '—— 为你骄傲' },
+  { text: '"今天的汗水，是明天微笑的资本。加油！"', author: '—— 相信自己' },
+  { text: '"没有白走的路，没有白读的书，每一步都算数！"', author: '—— 日积月累' },
+  { text: '"遇到困难不要怕，像奥特曼一样勇敢打败它！"', author: '—— 你是小英雄' },
+  { text: '"专注当下，享受学习的过程，结果自然不会差！"', author: '—— 享受成长' },
+];
+
+function randomEncourage() {
+  const e = encourages[Math.floor(Math.random() * encourages.length)];
+  document.getElementById('encourageText').textContent = e.text;
+  document.querySelector('#encourageBox .author').textContent = e.author;
+}
+
+// ===================== 今日任务 =====================
+function renderToday() {
+  const today = getTodayStr();
+  document.getElementById('todayDate').textContent = `今天是 ${today}`;
+  const container = document.getElementById('todayTasks');
+  const tasks = homeworkData[today] || [];
+
+  if (tasks.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="icon">🎉</div>
+        <p>今天没有布置作业，好好休息或者复习一下吧！</p>
+      </div>`;
+    document.getElementById('todaySummary').style.display = 'none';
+    return;
+  }
+
+  const subjects = { english: '英语', chinese: '语文', math: '数学' };
+  const subjectClass = { english: 'subject-english', chinese: 'subject-chinese', math: 'subject-math' };
+  const grouped = {};
+  tasks.forEach(t => {
+    if (!grouped[t.subject]) grouped[t.subject] = [];
+    grouped[t.subject].push(t);
+  });
+
+  let html = '';
+  Object.entries(grouped).forEach(([sub, list]) => {
+    html += `<div class="subject-group">
+      <div class="subject-label ${subjectClass[sub]}">${subjects[sub]}</div>`;
+    list.forEach(t => {
+      const done = !!state.completed[t.id];
+      html += `
+        <div class="task-item ${done ? 'done' : ''}" onclick="toggleTask('${t.id}')">
+          <div class="task-checkbox">${done ? '✓' : ''}</div>
+          <div class="task-text">${t.text}</div>
+          <div class="task-points">+${t.points}分</div>
+        </div>`;
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+
+  // Progress rings
+  const total = tasks.length;
+  const done = tasks.filter(t => state.completed[t.id]).length;
+  const engTotal = tasks.filter(t => t.subject === 'english').length;
+  const engDone = tasks.filter(t => t.subject === 'english' && state.completed[t.id]).length;
+  const chnTotal = tasks.filter(t => t.subject === 'chinese').length;
+  const chnDone = tasks.filter(t => t.subject === 'chinese' && state.completed[t.id]).length;
+  const matTotal = tasks.filter(t => t.subject === 'math').length;
+  const matDone = tasks.filter(t => t.subject === 'math' && state.completed[t.id]).length;
+
+  const rings = [
+    { label: '总进度', value: done, total: total, color: '#4f46e5' },
+    { label: '英语', value: engDone, total: engTotal, color: '#3b82f6' },
+    { label: '语文', value: chnDone, total: chnTotal, color: '#22c55e' },
+    { label: '数学', value: matDone, total: matTotal, color: '#f59e0b' },
+  ];
+
+  let ringsHtml = '';
+  rings.forEach(r => {
+    if (r.total === 0) return;
+    const pct = r.value / r.total;
+    const circ = 2 * Math.PI * 28;
+    const offset = circ * (1 - pct);
+    ringsHtml += `
+      <div class="progress-ring-item">
+        <svg width="72" height="72">
+          <circle cx="36" cy="36" r="28" stroke="#e2e8f0" stroke-width="6" fill="none"/>
+          <circle cx="36" cy="36" r="28" stroke="${r.color}" stroke-width="6" fill="none"
+            stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+          <text x="36" y="40" text-anchor="middle" font-size="14" font-weight="bold" fill="${r.color}">${Math.round(pct*100)}%</text>
+        </svg>
+        <div class="ring-label">${r.label}</div>
+        <div class="ring-value">${r.value}/${r.total}</div>
+      </div>`;
+  });
+  document.getElementById('todayRings').innerHTML = ringsHtml;
+  document.getElementById('todaySummary').style.display = 'block';
+
+  updateScoreBar();
+}
+
+function toggleTask(taskId) {
+  const today = getTodayStr();
+  const task = (homeworkData[today] || []).find(t => t.id === taskId);
+  if (!task) return;
+
+  if (state.completed[taskId]) {
+    delete state.completed[taskId];
+    state.scores[today] = (state.scores[today] || 0) - task.points;
+  } else {
+    state.completed[taskId] = true;
+    state.scores[today] = (state.scores[today] || 0) + task.points;
+    // First completion tracking for streak
+    if (!state.firstDate) state.firstDate = new Date().toISOString().split('T')[0];
+  }
+
+  saveState(state);
+  renderToday();
+  checkAchievements();
+}
+
+// ===================== 积分与连续打卡 =====================
+function updateScoreBar() {
+  const today = getTodayStr();
+  let total = 0;
+  Object.values(state.scores).forEach(s => total += s);
+  const todayScore = state.scores[today] || 0;
+
+  // Streak calculation
+  let streak = 0;
+  const todayDate = new Date();
+  for (let i = 0; i < 60; i++) {
+    const d = new Date(todayDate);
+    d.setDate(d.getDate() - i);
+    const m = d.getMonth() + 1;
+    const day = d.getDate();
+    const key = `${m}.${day}`;
+    const dayTasks = homeworkData[key] || [];
+    if (dayTasks.length === 0) {
+      if (i === 0) continue;
+      break;
+    }
+    const dayDone = dayTasks.every(t => state.completed[t.id]);
+    if (dayDone) {
+      streak++;
+    } else if (i > 0) {
+      break;
+    }
+  }
+
+  document.getElementById('totalScore').textContent = total;
+  document.getElementById('todayScore').textContent = todayScore;
+  document.getElementById('streakDays').textContent = streak;
+  document.getElementById('streakBadge').style.display = streak >= 3 ? 'inline-flex' : 'none';
+}
+
+// ===================== 日历 =====================
+let currentMonth = 6; // 0-based, July
+let currentYear = 2026;
+
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  document.getElementById('monthLabel').textContent = `${currentYear}年${currentMonth + 1}月`;
+  grid.innerHTML = '';
+
+  const days = ['日','一','二','三','四','五','六'];
+  days.forEach(d => {
+    grid.innerHTML += `<div class="cal-header">${d}</div>`;
+  });
+
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    grid.innerHTML += '<div></div>';
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const key = `${currentMonth + 1}.${d}`;
+    const tasks = homeworkData[key] || [];
+    const hasTask = tasks.length > 0;
+    const allDone = hasTask && tasks.every(t => state.completed[t.id]);
+    const hasEng = tasks.some(t => t.subject === 'english');
+    const hasChn = tasks.some(t => t.subject === 'chinese');
+    const hasMat = tasks.some(t => t.subject === 'math');
+
+    let cls = 'cal-day';
+    if (allDone) cls += ' all-done';
+    else if (hasTask) cls += ' has-task';
+
+    let dots = '';
+    if (hasEng) dots += '<div class="day-dot eng"></div>';
+    if (hasChn) dots += '<div class="day-dot chn"></div>';
+    if (hasMat) dots += '<div class="day-dot mat"></div>';
+
+    grid.innerHTML += `
+      <div class="${cls}" onclick="showDayModal('${key}')">
+        <div class="day-num">${d}</div>
+        <div class="day-dots">${dots}</div>
+        ${allDone ? '<div class="done-badge">✓</div>' : ''}
+      </div>`;
+  }
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderCalendar();
+}
+
+function showDayModal(dateStr) {
+  document.getElementById('modalDate').textContent = `${currentYear}年${dateStr} 作业清单`;
+  const tasks = homeworkData[dateStr] || [];
+  const container = document.getElementById('modalTasks');
+
+  if (tasks.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-secondary);text-align:center;padding:20px;">这一天没有作业</p>';
+  } else {
+    const subjects = { english: '英语', chinese: '语文', math: '数学' };
+    container.innerHTML = tasks.map(t => {
+      const done = state.completed[t.id];
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px;background:${done?'#f0fdf4':'#f8fafc'};border-radius:10px;margin-bottom:8px;border:2px solid ${done?'#22c55e':'#e2e8f0'}">
+        <span style="font-size:1.2rem">${done ? '✅' : '⬜'}</span>
+        <span style="flex:1">${subjects[t.subject]}: ${t.text}</span>
+        <span style="color:var(--warning);font-weight:600;font-size:0.85rem;">+${t.points}分</span>
+      </div>`;
+    }).join('');
+  }
+  document.getElementById('dayModal').classList.add('active');
+}
+
+function closeModal() {
+  document.getElementById('dayModal').classList.remove('active');
+}
+
+// ===================== 游戏系统 =====================
+let currentGame = null;
+let gameTimerInterval = null;
+let gameTimeLeft = 300; // 5 minutes
+
+const GAME_COSTS = { memory: 20, puzzle: 30, g2048: 25 };
+
+function startGame(type) {
+  const cost = GAME_COSTS[type];
+  let total = 0;
+  Object.values(state.scores).forEach(s => total += s);
+  if (total < cost) {
+    alert(`积分不足！需要 ${cost} 积分，当前 ${total} 积分。快去完成作业吧！`);
+    return;
+  }
+
+  // Deduct cost
+  const today = getTodayStr();
+  state.scores[today] = (state.scores[today] || 0) - cost;
+  saveState(state);
+  updateScoreBar();
+
+  currentGame = type;
+  gameTimeLeft = 300;
+  document.getElementById('gameArea').classList.add('active');
+  document.getElementById('gameTimer').textContent = '05:00';
+
+  if (gameTimerInterval) clearInterval(gameTimerInterval);
+  gameTimerInterval = setInterval(() => {
+    gameTimeLeft--;
+    const m = Math.floor(gameTimeLeft / 60).toString().padStart(2, '0');
+    const s = (gameTimeLeft % 60).toString().padStart(2, '0');
+    document.getElementById('gameTimer').textContent = `${m}:${s}`;
+    if (gameTimeLeft <= 0) {
+      clearInterval(gameTimerInterval);
+      alert('游戏时间到！休息一下吧，准备下一项学习任务~');
+      endGame();
+    }
+  }, 1000);
+
+  if (type === 'memory') initMemoryGame();
+  else if (type === 'puzzle') initPuzzleGame();
+  else if (type === 'g2048') init2048Game();
+}
+
+function endGame() {
+  if (gameTimerInterval) clearInterval(gameTimerInterval);
+  document.getElementById('gameArea').classList.remove('active');
+  currentGame = null;
+}
+
+// ---- 记忆翻牌 ----
+function initMemoryGame() {
+  document.getElementById('gameTitle').textContent = '🧠 记忆翻牌';
+  const emojis = ['🐶','🐱','🐭','🐹','🐰','🦊','🐻','🐼'];
+  const cards = [...emojis, ...emojis];
+  cards.sort(() => Math.random() - 0.5);
+
+  let flipped = [];
+  let matched = 0;
+
+  const board = document.getElementById('gameBoard');
+  board.innerHTML = '<div class="memory-grid">' + cards.map((c, i) =>
+    `<div class="memory-card" data-idx="${i}" data-emoji="${c}" onclick="flipCard(this)">?</div>`
+  ).join('') + '</div>';
+
+  window.flipCard = function(el) {
+    if (el.classList.contains('flipped') || el.classList.contains('matched') || flipped.length >= 2) return;
+    el.classList.add('flipped');
+    el.textContent = el.dataset.emoji;
+    flipped.push(el);
+
+    if (flipped.length === 2) {
+      if (flipped[0].dataset.emoji === flipped[1].dataset.emoji) {
+        setTimeout(() => {
+          flipped.forEach(c => c.classList.add('matched'));
+          flipped = [];
+          matched++;
+          if (matched === emojis.length) {
+            setTimeout(() => {
+              alert('太棒了！全部配对成功！奖励额外10积分！');
+              const today = getTodayStr();
+              state.scores[today] = (state.scores[today] || 0) + 10;
+              saveState(state);
+              updateScoreBar();
+              endGame();
+            }, 400);
+          }
+        }, 400);
+      } else {
+        setTimeout(() => {
+          flipped.forEach(c => { c.classList.remove('flipped'); c.textContent = '?'; });
+          flipped = [];
+        }, 800);
+      }
+    }
+  };
+}
+
+// ---- 数字华容道 ----
+function initPuzzleGame() {
+  document.getElementById('gameTitle').textContent = '🔢 数字华容道';
+  let tiles = [1,2,3,4,5,6,7,8,0];
+
+  function shuffle() {
+    for (let i = 0; i < 200; i++) {
+      const emptyIdx = tiles.indexOf(0);
+      const neighbors = [];
+      const row = Math.floor(emptyIdx / 3);
+      const col = emptyIdx % 3;
+      if (row > 0) neighbors.push(emptyIdx - 3);
+      if (row < 2) neighbors.push(emptyIdx + 3);
+      if (col > 0) neighbors.push(emptyIdx - 1);
+      if (col < 2) neighbors.push(emptyIdx + 1);
+      const swap = neighbors[Math.floor(Math.random() * neighbors.length)];
+      [tiles[emptyIdx], tiles[swap]] = [tiles[swap], tiles[emptyIdx]];
+    }
+  }
+  shuffle();
+
+  function renderPuzzle() {
+    const board = document.getElementById('gameBoard');
+    board.innerHTML = '<div class="puzzle-grid">' + tiles.map((n, i) =>
+      n === 0
+        ? '<div class="puzzle-cell empty"></div>'
+        : `<button class="puzzle-cell" onclick="moveTile(${i})">${n}</button>`
+    ).join('') + '</div>';
+  }
+
+  window.moveTile = function(idx) {
+    const emptyIdx = tiles.indexOf(0);
+    const row = Math.floor(idx / 3);
+    const col = idx % 3;
+    const eRow = Math.floor(emptyIdx / 3);
+    const eCol = emptyIdx % 3;
+    if (Math.abs(row - eRow) + Math.abs(col - eCol) !== 1) return;
+    [tiles[idx], tiles[emptyIdx]] = [tiles[emptyIdx], tiles[idx]];
+    renderPuzzle();
+    if (tiles.every((v, i) => v === (i + 1) % 9)) {
+      setTimeout(() => {
+        alert('恭喜！数字华容道完成！奖励额外15积分！');
+        const today = getTodayStr();
+        state.scores[today] = (state.scores[today] || 0) + 15;
+        saveState(state);
+        updateScoreBar();
+        endGame();
+      }, 300);
+    }
+  };
+
+  renderPuzzle();
+}
+
+// ---- 2048 ----
+function init2048Game() {
+  document.getElementById('gameTitle').textContent = '🎯 2048挑战';
+  let grid = Array(4).fill().map(() => Array(4).fill(0));
+
+  function addRandom() {
+    const empties = [];
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (!grid[r][c]) empties.push([r,c]);
+    if (!empties.length) return;
+    const [r,c] = empties[Math.floor(Math.random() * empties.length)];
+    grid[r][c] = Math.random() < 0.9 ? 2 : 4;
+  }
+
+  function render2048() {
+    const board = document.getElementById('gameBoard');
+    board.innerHTML = '<div class="g2048-grid">' + grid.flat().map(n =>
+      `<div class="g2048-cell" data-val="${n}">${n || ''}</div>`
+    ).join('') + '</div>';
+  }
+
+  function slideRow(row) {
+    let filtered = row.filter(x => x);
+    for (let i = 0; i < filtered.length - 1; i++) {
+      if (filtered[i] === filtered[i+1]) {
+        filtered[i] *= 2;
+        filtered[i+1] = 0;
+      }
+    }
+    filtered = filtered.filter(x => x);
+    while (filtered.length < 4) filtered.push(0);
+    return filtered;
+  }
+
+  function move(dir) {
+    let moved = false;
+    const old = grid.map(r => [...r]);
+    if (dir === 'left') {
+      for (let r = 0; r < 4; r++) grid[r] = slideRow(grid[r]);
+    } else if (dir === 'right') {
+      for (let r = 0; r < 4; r++) grid[r] = slideRow(grid[r].reverse()).reverse();
+    } else if (dir === 'up') {
+      for (let c = 0; c < 4; c++) {
+        const col = [grid[0][c], grid[1][c], grid[2][c], grid[3][c]];
+        const newCol = slideRow(col);
+        for (let r = 0; r < 4; r++) grid[r][c] = newCol[r];
+      }
+    } else if (dir === 'down') {
+      for (let c = 0; c < 4; c++) {
+        const col = [grid[0][c], grid[1][c], grid[2][c], grid[3][c]];
+        const newCol = slideRow(col.reverse()).reverse();
+        for (let r = 0; r < 4; r++) grid[r][c] = newCol[r];
+      }
+    }
+    for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) if (grid[r][c] !== old[r][c]) moved = true;
+    if (moved) { addRandom(); render2048(); }
+    if (grid.flat().includes(2048)) {
+      setTimeout(() => {
+        alert('太厉害了！你合成了2048！奖励额外20积分！');
+        const today = getTodayStr();
+        state.scores[today] = (state.scores[today] || 0) + 20;
+        saveState(state);
+        updateScoreBar();
+      }, 300);
+    }
+  }
+
+  window.g2048move = move;
+  addRandom(); addRandom(); render2048();
+
+  // Touch/keyboard
+  document.onkeydown = (e) => {
+    if (currentGame !== 'g2048') return;
+    if (e.key === 'ArrowLeft') move('left');
+    if (e.key === 'ArrowRight') move('right');
+    if (e.key === 'ArrowUp') move('up');
+    if (e.key === 'ArrowDown') move('down');
+  };
+}
+
+// ===================== 错题本 =====================
+let selectedTags = [];
+
+// Tag selection
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('tag-chip')) {
+    const tag = e.target.dataset.tag;
+    e.target.classList.toggle('selected');
+    if (selectedTags.includes(tag)) selectedTags = selectedTags.filter(t => t !== tag);
+    else selectedTags.push(tag);
+  }
+});
+
+function addError() {
+  const subject = document.getElementById('errSubject').value;
+  const question = document.getElementById('errQuestion').value.trim();
+  const answer = document.getElementById('errAnswer').value.trim();
+  const wrong = document.getElementById('errWrong').value.trim();
+  const analysis = document.getElementById('errAnalysis').value.trim();
+
+  if (!question || !answer) {
+    alert('请至少填写题目和正确答案');
+    return;
+  }
+
+  state.errors.push({
+    id: Date.now(),
+    subject,
+    question,
+    answer,
+    wrong,
+    tags: [...selectedTags],
+    analysis,
+    date: new Date().toLocaleDateString('zh-CN'),
+  });
+
+  saveState(state);
+
+  // Clear form
+  document.getElementById('errQuestion').value = '';
+  document.getElementById('errAnswer').value = '';
+  document.getElementById('errWrong').value = '';
+  document.getElementById('errAnalysis').value = '';
+  selectedTags = [];
+  document.querySelectorAll('.tag-chip').forEach(t => t.classList.remove('selected'));
+
+  renderErrors();
+  renderAnalysis();
+
+  // Bonus points for reflecting on errors
+  const today = getTodayStr();
+  state.scores[today] = (state.scores[today] || 0) + 5;
+  saveState(state);
+  updateScoreBar();
+  alert('错题已记录！+5积分（认真反思错题很值得表扬！）');
+}
+
+function renderErrors() {
+  const container = document.getElementById('errorList');
+  if (state.errors.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-secondary);text-align:center;">还没有错题记录</p>';
+    return;
+  }
+  const subjects = { math: '数学', chinese: '语文', english: '英语' };
+  container.innerHTML = state.errors.slice().reverse().map(e => `
+    <div class="error-item">
+      <div class="error-subject">${subjects[e.subject]} · ${e.date}</div>
+      <div class="error-question">题目：${e.question}</div>
+      <div style="font-size:0.85rem;color:var(--text-secondary);">
+        正确答案：<span style="color:var(--success);font-weight:600;">${e.answer}</span>
+        ${e.wrong ? ` · 错误答案：<span style="color:var(--danger);">${e.wrong}</span>` : ''}
+      </div>
+      ${e.analysis ? `<div style="margin-top:6px;font-size:0.85rem;background:#fffbeb;padding:8px;border-radius:8px;"><strong>分析：</strong>${e.analysis}</div>` : ''}
+      <div class="error-tags">${e.tags.map(t => `<span class="error-tag">${t}</span>`).join('')}</div>
+      <button onclick="deleteError(${e.id})" style="margin-top:8px;background:#fee2e2;color:#991b1b;border:none;padding:4px 12px;border-radius:8px;cursor:pointer;font-size:0.8rem;">删除</button>
+    </div>
+  `).join('');
+}
+
+function deleteError(id) {
+  state.errors = state.errors.filter(e => e.id !== id);
+  saveState(state);
+  renderErrors();
+  renderAnalysis();
+}
+
+function renderAnalysis() {
+  const box = document.getElementById('analysisBox');
+  if (state.errors.length === 0) {
+    box.innerHTML = '<p style="color:var(--text-secondary);">还没有录入错题，开始记录第一道错题吧！</p>';
+    return;
+  }
+
+  // Count by tag
+  const tagCounts = {};
+  state.errors.forEach(e => {
+    e.tags.forEach(t => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
+  });
+  const sorted = Object.entries(tagCounts).sort((a,b) => b[1] - a[1]);
+
+  // Subject counts
+  const subjCounts = {};
+  state.errors.forEach(e => { subjCounts[e.subject] = (subjCounts[e.subject] || 0) + 1; });
+  const subjects = { math: '数学', chinese: '语文', english: '英语' };
+
+  let html = '<h4>薄弱知识点排行</h4>';
+  if (sorted.length === 0) {
+    html += '<p style="color:var(--text-secondary);">请为错题添加知识点标签，以便分析薄弱点</p>';
+  } else {
+    html += '<div>' + sorted.map(([tag, count]) =>
+      `<span class="weak-tag">${tag}<span class="count">${count}次</span></span>`
+    ).join('') + '</div>';
+  }
+
+  html += '<h4 style="margin-top:14px;">学科分布</h4>';
+  html += '<div>' + Object.entries(subjCounts).map(([s, c]) =>
+    `<span class="weak-tag">${subjects[s]}<span class="count">${c}道</span></span>`
+  ).join('') + '</div>';
+
+  html += '<h4 style="margin-top:14px;">思维开导</h4>';
+  if (sorted.length > 0) {
+    const topTag = sorted[0][0];
+    const guides = {
+      '乘法': '多位数乘法要分步来：先乘个位，再乘十位，最后加起来。多练习竖式计算，注意进位！',
+      '除法': '除法可以想成"分东西"，看被除数里包含几个除数。试商的时候可以先估算一下。',
+      '加减法': '加减法要注意对齐数位，进位和退位要做好标记。验算是好习惯！',
+      '应用题': '应用题先读3遍，找出已知条件和问题。画线段图或列表能帮助理清思路。',
+      '背诵': '背诵可以分段进行，先理解意思再记忆。早上和睡前记忆效果最好哦！',
+      '阅读理解': '阅读题先看问题，再带着问题读文章。答案往往在文中找，注意关键词句。',
+      '字词': '字词要多写多记，可以用"造句法"来加深记忆。错别字准备一个本子专门记录。',
+      '语法': '英语语法要理解规则，多朗读例句。可以编成小口诀帮助记忆。',
+      '单位换算': '单位换算记住进率，大化小乘进率，小化大除进率。常用进率要背熟！',
+      '图形': '几何题多画图，把题目条件标在图上。记住常见图形的周长和面积公式。',
+    };
+    html += `<p style="background:white;padding:12px;border-radius:10px;margin-top:8px;"><strong>${topTag}</strong> 是目前的薄弱点。<br>${guides[topTag] || '针对这个知识点，建议多找同类型的题目练习，总结规律。'}</p>`;
+  }
+
+  box.innerHTML = html;
+}
+
+// ===================== 成就系统 =====================
+const achievements = [
+  { id: 'first_task', icon: '🌱', name: '初次打卡', desc: '完成第一个作业任务', check: () => Object.keys(state.completed).length >= 1 },
+  { id: 'day_complete', icon: '⭐', name: '完美一天', desc: '完成当天所有作业', check: () => {
+    const today = getTodayStr();
+    const tasks = homeworkData[today] || [];
+    return tasks.length > 0 && tasks.every(t => state.completed[t.id]);
+  }},
+  { id: 'streak_3', icon: '🔥', name: '三连击', desc: '连续3天完成所有作业', check: () => {
+    let streak = 0;
+    const todayDate = new Date();
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(todayDate); d.setDate(d.getDate() - i);
+      const key = `${d.getMonth()+1}.${d.getDate()}`;
+      const tasks = homeworkData[key] || [];
+      if (tasks.length === 0) { if (i===0) continue; break; }
+      if (tasks.every(t => state.completed[t.id])) streak++; else if (i>0) break;
+    }
+    return streak >= 3;
+  }},
+  { id: 'streak_7', icon: '🏆', name: '一周坚持', desc: '连续7天完成所有作业', check: () => {
+    let streak = 0;
+    const todayDate = new Date();
+    for (let i = 0; i < 60; i++) {
+      const d = new Date(todayDate); d.setDate(d.getDate() - i);
+      const key = `${d.getMonth()+1}.${d.getDate()}`;
+      const tasks = homeworkData[key] || [];
+      if (tasks.length === 0) { if (i===0) continue; break; }
+      if (tasks.every(t => state.completed[t.id])) streak++; else if (i>0) break;
+    }
+    return streak >= 7;
+  }},
+  { id: 'score_100', icon: '💎', name: '积分破百', desc: '累计获得100积分', check: () => {
+    let total = 0; Object.values(state.scores).forEach(s => total += s); return total >= 100;
+  }},
+  { id: 'score_300', icon: '👑', name: '积分达人', desc: '累计获得300积分', check: () => {
+    let total = 0; Object.values(state.scores).forEach(s => total += s); return total >= 300;
+  }},
+  { id: 'error_1', icon: '📝', name: '善于反思', desc: '记录第一道错题', check: () => state.errors.length >= 1 },
+  { id: 'error_5', icon: '🔍', name: '纠错能手', desc: '记录5道以上错题', check: () => state.errors.length >= 5 },
+  { id: 'game_win', icon: '🎮', name: '游戏高手', desc: '赢得任意小游戏', check: () => false }, // tracked via gameHistory
+  { id: 'half_done', icon: '📚', name: '过半啦', desc: '完成暑假作业一半以上', check: () => {
+    const all = Object.values(homeworkData).flat();
+    const done = all.filter(t => state.completed[t.id]).length;
+    return done >= all.length / 2;
+  }},
+  { id: 'all_done', icon: '🎓', name: '暑假王者', desc: '完成所有暑假作业', check: () => {
+    const all = Object.values(homeworkData).flat();
+    return all.length > 0 && all.every(t => state.completed[t.id]);
+  }},
+];
+
+function checkAchievements() {
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const grid = document.getElementById('achieveGrid');
+  grid.innerHTML = achievements.map(a => {
+    const unlocked = a.check();
+    return `<div class="achieve-item ${unlocked ? 'unlocked' : ''}">
+      <div class="achieve-icon">${a.icon}</div>
+      <h4>${a.name}</h4>
+      <p>${a.desc}</p>
+    </div>`;
+  }).join('');
+}
+
+const quotes = [
+  { text: '"读书破万卷，下笔如有神。"', author: '—— 杜甫' },
+  { text: '"学而时习之，不亦说乎？"', author: '—— 孔子' },
+  { text: '"天才就是百分之一的灵感加百分之九十九的汗水。"', author: '—— 爱迪生' },
+  { text: '"只要功夫深，铁杵磨成针。"', author: '—— 中国古语' },
+  { text: '"千里之行，始于足下。"', author: '—— 老子' },
+  { text: '"世上无难事，只怕有心人。"', author: '—— 毛泽东' },
+  { text: '"知之者不如好之者，好之者不如乐之者。"', author: '—— 孔子' },
+  { text: '"不积跬步，无以至千里；不积小流，无以成江海。"', author: '—— 荀子' },
+];
+
+function renderQuotes() {
+  document.getElementById('quotesList').innerHTML = quotes.map(q => `
+    <div style="padding:12px;background:var(--bg);border-radius:10px;margin-bottom:10px;border-left:3px solid var(--primary);">
+      <p style="font-weight:500;">${q.text}</p>
+      <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">${q.author}</p>
+    </div>
+  `).join('');
+}
+
+// ===================== 导航切换 =====================
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+  });
+});
+
+// ===================== 初始化 =====================
+function init() {
+  randomEncourage();
+  renderToday();
+  renderCalendar();
+  renderErrors();
+  renderAnalysis();
+  renderAchievements();
+  renderQuotes();
+  updateScoreBar();
+}
+
+init();
+
+// Daily encourage refresh
+setInterval(() => {
+  randomEncourage();
+}, 30000);
+
+// PWA Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+
+</body>
+</html>
