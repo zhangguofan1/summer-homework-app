@@ -1,5 +1,5 @@
 // Service Worker for PWA - 缓存所有文件实现离线访问
-const CACHE_NAME = 'homework-workbench-v3';
+const CACHE_NAME = 'homework-workbench-v4';
 const FILES_TO_CACHE = [
   '.',
   'index.html',
