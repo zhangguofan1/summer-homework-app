@@ -7,13 +7,14 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="暑假作业工作台">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#4f46e5">
+<meta name="version" content="v3.2-20260728">
+<meta name="theme-color" content="#1a1a2e">
 <meta name="description" content="暑假作业打卡、积分、游戏、成长一站式工作台">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
-<title>暑假作业进阶工作台</title>
+<title>暑假作业进阶工作台 v3.2</title>
 <style>
   :root {
     --primary: #4f46e5; --primary-light: #818cf8;
@@ -1010,7 +1011,10 @@
     <!-- ====== 设置 ====== -->
     <div class="detail-panel panel-view" id="view-settings">
       <div class="card">
-        <div class="card-header">🤖 AI智能批改设置</div>
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+          <span>🤖 AI智能批改设置</span>
+          <span id="versionTag" style="font-size:0.7rem;background:#6366f1;color:white;padding:2px 8px;border-radius:10px;">v3.2</span>
+        </div>
         <div class="card-body">
           <div class="settings-section">
             <div class="ai-mode-toggle">
@@ -1043,6 +1047,7 @@
             </div>
             <div><span class="api-status none" id="apiStatus">未配置</span></div>
             <p class="settings-hint">免费获取：<a href="https://platform.deepseek.com/api_keys" target="_blank">DeepSeek 开放平台</a>（手机号注册即可，新用户送500万tokens）</p>
+            <button class="btn-secondary" onclick="diagnoseAI()" style="margin-top:8px;width:100%;">🔍 AI配置诊断</button>
           </div>
           <div id="geminiConfig" class="settings-section" style="display:none;">
             <h4>Google Gemini API 密钥</h4>
@@ -1185,6 +1190,27 @@
 </div>
 
 <script>
+// ★ 版本自检：如果加载的是旧缓存版本，强制清除并刷新
+(function(){
+  var ver = document.querySelector('meta[name="version"]');
+  var expected = 'v3.2-20260728';
+  if(!ver || ver.getAttribute('content') !== expected){
+    // 旧版本缓存 → 清除所有 SW 并强制刷新
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations().then(function(regs){
+        regs.forEach(function(r){ r.unregister(); });
+      });
+    }
+    if('caches' in window){
+      caches.keys().then(function(names){ names.forEach(function(n){ caches.delete(n); }); });
+    }
+    localStorage.removeItem('sw_force_reload');
+    // 清除浏览器缓存后强制刷新
+    location.reload(true);
+    return;
+  }
+})();
+
 // ===================== 作业数据 =====================
 const homeworkData = {};
 
@@ -2143,7 +2169,7 @@ function submitUpload(){
       runAIGrading(uploadTaskId);
     }else{
       // AI模式 + 无密钥 → 提示配置
-      alert('🤖 AI模式已开启但未配置API密钥。\n\n请在「设置」中配置 DeepSeek API 密钥，或切换到手动审核模式。\n\n当前作业已提交为待审状态。');
+      alert('🤖 AI模式已开启但未读到API密钥。\n\n🔧 请在「设置」→ DeepSeek 区域：\n1. 重新粘贴密钥并点「保存」\n2. 点「🔍 AI配置诊断」查看详情\n3. 截图诊断结果发给我分析\n\n当前作业已提交为待审状态。');
     }
   }else{
     // 手动模式 → 作业提交待家长审核
@@ -2532,6 +2558,41 @@ function onAPIKeyChange(){
     gs.textContent=gk?'已配置 ✅':'未配置';
     gs.className='api-status '+(gk?'ok':'none');
   }
+}
+function diagnoseAI(){
+  var lines = [];
+  lines.push('📋 AI配置诊断报告');
+  lines.push('──────────────────');
+  lines.push('页面版本：v3.2-20260728');
+  lines.push('aiMode 全局变量：' + aiMode);
+  lines.push('aiSettings.provider：' + aiSettings.provider);
+  lines.push('aiSettings.deepseekKey：' + (aiSettings.deepseekKey ? aiSettings.deepseekKey.substring(0,8)+'...' : '(空)'));
+  lines.push('aiSettings.apiKey：' + (aiSettings.apiKey ? aiSettings.apiKey.substring(0,8)+'...' : '(空)'));
+  lines.push('getActiveKey() 返回：' + (getActiveKey() ? getActiveKey().substring(0,8)+'...' : '(空)'));
+  lines.push('──────────────────');
+  // 直接读取 localStorage
+  try {
+    var raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){
+      var s = JSON.parse(raw);
+      lines.push('localStorage 中有数据：✅');
+      if(s.aiSettings){
+        lines.push('  localStorage→aiSettings.provider：' + (s.aiSettings.provider||'(空)'));
+        lines.push('  localStorage→aiSettings.deepseekKey：' + (s.aiSettings.deepseekKey ? s.aiSettings.deepseekKey.substring(0,8)+'...' : '(空)'));
+        lines.push('  localStorage→aiSettings.apiKey：' + (s.aiSettings.apiKey ? s.aiSettings.apiKey.substring(0,8)+'...' : '(空)'));
+      } else {
+        lines.push('  localStorage→aiSettings：❌ 不存在！');
+      }
+      lines.push('  localStorage→aiMode：' + s.aiMode);
+    } else {
+      lines.push('localStorage 中无数据：❌');
+    }
+  } catch(e){
+    lines.push('localStorage 读取异常：' + e.message);
+  }
+  lines.push('──────────────────');
+  lines.push('请截图此诊断信息发给我分析。');
+  alert(lines.join('\n'));
 }
 function setProvider(prov){
   aiSettings.provider = prov;
