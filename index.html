@@ -98,11 +98,12 @@
   .mobile-topbar {
     display: none; position: sticky; top: 0; z-index: 150;
     background: linear-gradient(135deg, var(--primary), #7c3aed);
-    color: white; padding: 12px 16px;
+    color: white; padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
     align-items: center; justify-content: space-between;
     box-shadow: var(--shadow-lg);
   }
-  .mobile-topbar .hamburger { font-size: 1.4rem; background: none; border: none; color: white; cursor: pointer; padding: 4px; }
+  .mobile-topbar .hamburger { font-size: 1.5rem; background: none; border: none; color: white; cursor: pointer; padding: 12px 14px; min-width: 48px; min-height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 8px; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  .mobile-topbar .hamburger:active { background: rgba(255,255,255,0.15); }
   .mobile-topbar h1 { font-size: 1.05rem; font-weight: 600; }
   .mobile-topbar .score-quick { font-size: 0.8rem; opacity: 0.9; }
   .mobile-topbar .score-quick span { font-weight: 700; }
@@ -736,6 +737,7 @@
     </div>
     <div class="sidebar-footer">
       <button id="sideParentToggle" onclick="toggleParentMode()">🔒 家长模式</button>
+      <div id="sideModeIndicator" style="margin-top:8px;font-size:0.78rem;text-align:center;opacity:0.8;"></div>
     </div>
   </aside>
 
@@ -1117,6 +1119,7 @@
   <div class="modal">
     <button class="modal-close" onclick="closeUploadModal()">&times;</button>
     <h3 id="uploadModalTitle">提交作业</h3>
+    <div id="uploadModeTag" style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:0.75rem;font-weight:600;margin-bottom:8px;background:#e0e7ff;color:#4f46e5;">🤖 AI自动批改模式</div>
     <p style="color:var(--text-secondary);margin-bottom:10px;font-size:0.85rem;">拍下完成的作业照片或视频，AI会自动批改哦！</p>
     <div class="upload-options">
       <label class="upload-btn">
@@ -1682,6 +1685,14 @@ function closeSidebar(){
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('sidebarOverlay').classList.remove('show');
 }
+function updateSidebarAIMarker(){
+  // 在侧边栏底部显示当前AI模式状态
+  const footer = document.getElementById('sideModeIndicator');
+  if(!footer) return;
+  footer.innerHTML = aiMode
+    ? '<span style="color:#a5b4fc;">🤖 AI批改模式</span> <span style="font-size:0.7rem;opacity:0.7;">自动评分中</span>'
+    : '<span style="color:#fbbf24;">👨‍👩‍👧 手动审核模式</span>';
+}
 
 // Update today date display
 function updateDateDisplay(){
@@ -2078,6 +2089,16 @@ function openUploadModal(taskId){
   document.getElementById('uploadModalTitle').textContent='提交: '+(task?task.text:taskId);
   document.getElementById('uploadPreview').innerHTML='';
   document.getElementById('uploadSubmitBtn').disabled=true;
+  // 根据当前AI模式更新弹窗UI
+  const tag=document.getElementById('uploadModeTag');
+  const btn=document.getElementById('uploadSubmitBtn');
+  if(aiMode){
+    if(tag){ tag.style.display='inline-block'; tag.textContent='🤖 AI自动批改模式'; tag.style.background='#e0e7ff'; tag.style.color='#4f46e5'; }
+    if(btn) btn.textContent='📤 提交AI批改';
+  }else{
+    if(tag){ tag.style.display='inline-block'; tag.textContent='👨‍👩‍👧 手动审核模式'; tag.style.background='#fef3c7'; tag.style.color='#92400e'; }
+    if(btn) btn.textContent='📤 提交作业';
+  }
   document.getElementById('uploadModal').classList.add('active');
   // Reset file inputs
   document.querySelectorAll('#uploadModal input[type="file"]').forEach(inp=>inp.value='');
@@ -2106,12 +2127,18 @@ function submitUpload(){
   closeUploadModal();
   renderToday(); renderReview(); updateScoreBar();
 
-  if(aiMode && getActiveKey()){
-    runAIGrading(uploadTaskId);
-  }else if(aiMode && !getActiveKey()){
-    alert('🤖 AI模式已开启但未配置API密钥。请在"设置"中配置DeepSeek或Gemini API密钥，或切换到手动审核模式。\n\n当前将以手动模式提交，由家长审核。');
+  if(aiMode){
+    const key=getActiveKey();
+    if(key){
+      // AI模式 + 有密钥 → 触发AI批改
+      runAIGrading(uploadTaskId);
+    }else{
+      // AI模式 + 无密钥 → 提示配置
+      alert('🤖 AI模式已开启但未配置API密钥。\n\n请在「设置」中配置 DeepSeek API 密钥，或切换到手动审核模式。\n\n当前作业已提交为待审状态。');
+    }
   }else{
-    alert('📤 作业已提交！AI正在批改中，批改完成后由家长确认即可~');
+    // 手动模式 → 作业提交待家长审核
+    alert('📤 作业已提交！等待家长审核中～');
   }
 }
 
@@ -2440,6 +2467,7 @@ function changePassword(){
 function setAIMode(mode){
   aiMode=(mode==='ai');
   updateModeButtons();
+  updateSidebarAIMarker();
   saveState();
 }
 function updateModeButtons(){
@@ -2998,7 +3026,16 @@ function init(){
   if(!aiSettings.provider) aiSettings.provider='deepseek';
   document.getElementById('passThreshold').value=aiSettings.passThreshold;
   setProvider(aiSettings.provider);
-  updateThresholdLabel(); onAPIKeyChange(); updateModeButtons();
+  updateThresholdLabel(); onAPIKeyChange();
+  // 显式恢复AI模式状态并同步UI
+  const aiBtn=document.getElementById('aiModeBtn');
+  const manBtn=document.getElementById('manualModeBtn');
+  if(aiBtn){ aiBtn.classList.toggle('active', aiMode); }
+  if(manBtn){ manBtn.classList.toggle('active', !aiMode); }
+  const hint=document.getElementById('modeHint');
+  if(hint){ hint.style.display = aiMode ? 'none' : ''; }
+  // 更新侧边栏AI状态角标
+  updateSidebarAIMarker();
 
   randomEncourage();
   renderToday(); renderMiniAchieves();
