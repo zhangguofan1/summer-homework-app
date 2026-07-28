@@ -696,6 +696,111 @@
     font-size: 0.85rem; cursor: pointer; margin-top: 8px;
     font-weight: 600;
   }
+  /* ========== 惩罚与品质等级 ========== */
+  .penalty-banner {
+    background: linear-gradient(135deg, #fef2f2, #fee2e2);
+    border: 2px solid #ef4444; border-radius: 14px;
+    padding: 12px 16px; margin: 10px 0;
+    display: flex; align-items: center; gap: 10px;
+    animation: shakeIn 0.4s ease;
+  }
+  @keyframes shakeIn {
+    0%{transform:translateX(-10px);opacity:0;}
+    50%{transform:translateX(5px);}
+    100%{transform:translateX(0);opacity:1;}
+  }
+  .penalty-banner .penalty-icon { font-size: 1.5rem; }
+  .penalty-banner .penalty-amount {
+    font-weight: 800; color: #dc2626; font-size: 1.1rem;
+  }
+  .quality-grade {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 14px;
+    font-weight: 700; font-size: 0.8rem;
+  }
+  .grade-S { background: linear-gradient(135deg,#fef3c7,#fde68a); color:#92400e; border:2px solid #f59e0b; }
+  .grade-A { background: #dcfce7; color:#166534; border:2px solid #22c55e; }
+  .grade-B { background: #dbeafe; color:#1e40af; border:2px solid #3b82f6; }
+  .grade-C { background: #f3e8ff; color:#6b21a8; border:2px solid #9333ea; }
+  .grade-D { background: #fef2f2; color:#991b1b; border:2px solid #ef4444; }
+  .grade-F { background: #1e293b; color:#fca5a5; border:2px solid #7f1d1d; }
+  /* 神秘宝箱 */
+  .mystery-box {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 3px dashed #f59e0b; border-radius: 20px;
+    padding: 20px; text-align: center; margin: 14px 0;
+    cursor: pointer; transition: all 0.3s;
+    animation: glowPulse 2s infinite;
+  }
+  @keyframes glowPulse {
+    0%,100%{box-shadow:0 0 8px rgba(245,158,11,0.3);}
+    50%{box-shadow:0 0 24px rgba(245,158,11,0.6);}
+  }
+  .mystery-box:hover { transform: scale(1.02); }
+  .mystery-box .box-icon { font-size: 3rem; animation: bounce 0.8s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+  .mystery-box .box-title { font-weight: 700; font-size: 1.1rem; margin: 8px 0; }
+  .mystery-box.opened { opacity: 0.6; pointer-events: none; animation: none; border-style: solid; }
+  /* 冻结卡 */
+  .freeze-card-indicator {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: linear-gradient(135deg,#e0e7ff,#c7d2fe);
+    padding: 4px 12px; border-radius: 14px;
+    font-size: 0.8rem; font-weight: 600; color: #4338ca;
+    cursor: pointer; transition: all 0.2s;
+    border: 1px solid #a5b4fc;
+  }
+  .freeze-card-indicator:hover { background: #c7d2fe; }
+  .freeze-use-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 500;
+  }
+  .freeze-use-card {
+    background: var(--card); border-radius: 20px;
+    padding: 24px; max-width: 350px; width: 90%;
+    text-align: center; box-shadow: var(--shadow-lg);
+  }
+  /* 每日统计面板 */
+  .daily-stats { display: flex; gap: 8px; flex-wrap: wrap; }
+  .stat-chip {
+    background: var(--bg); padding: 6px 14px;
+    border-radius: 20px; font-size: 0.8rem; font-weight: 600;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .stat-chip .stat-val { color: var(--primary); }
+  .stat-chip.negative .stat-val { color: var(--danger); }
+  .stat-chip.positive .stat-val { color: var(--success); }
+  /* 奖励动画 */
+  .reward-popup {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    z-index: 600; pointer-events: none; animation: rewardFly 2s ease-out forwards;
+    font-size: 2rem; font-weight: 800; white-space: nowrap;
+  }
+  @keyframes rewardFly {
+    0%{transform:translate(-50%,-50%) scale(0);opacity:0;}
+    20%{transform:translate(-50%,-70%) scale(1.3);opacity:1;}
+    80%{transform:translate(-50%,-80%) scale(1);opacity:0.8;}
+    100%{transform:translate(-50%,-120%) scale(0.3);opacity:0;}
+  }
+  /* 惩罚弹窗动画 */
+  .penalty-popup {
+    position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+    z-index: 600; pointer-events: none; animation: penaltyShake 2.5s ease-out forwards;
+    font-weight: 800; font-size: 1.3rem; color: #dc2626;
+    background: #fef2f2; border: 2px solid #ef4444; border-radius: 16px;
+    padding: 12px 24px; white-space: nowrap; box-shadow: 0 8px 30px rgba(239,68,68,0.3);
+  }
+  @keyframes penaltyShake {
+    0%{transform:translateX(-50%) translateY(0);opacity:0;}
+    10%{transform:translateX(-40%) translateY(-10px);opacity:1;}
+    20%{transform:translateX(-60%) translateY(-10px);}
+    30%{transform:translateX(-45%) translateY(-10px);}
+    40%{transform:translateX(-55%) translateY(-10px);}
+    50%{transform:translateX(-50%) translateY(-10px);opacity:1;}
+    80%{transform:translateX(-50%) translateY(-20px);opacity:0.7;}
+    100%{transform:translateX(-50%) translateY(-40px);opacity:0;}
+  }
 </style>
 </head>
 <body>
@@ -710,6 +815,8 @@
     <div class="score-item"><span>连续:</span><span class="value" id="streakDays">0</span>天</div>
     <div class="score-item streak-flame" id="streakBadge" style="display:none;">连续打卡中!</div>
     <div class="score-item streak-multiplier" id="streakMultiplier" style="display:none;"></div>
+    <div class="score-item" id="penaltySummary" style="display:none;background:rgba(239,68,68,0.25);"></div>
+    <span class="freeze-card-indicator" id="freezeCardBadge" style="display:none;" onclick="showFreezeCardInfo()"></span>
   </div>
   <div class="review-badge" id="reviewCountBadge" style="display:none;">待审核: <span id="reviewCount">0</span>项</div>
 </div>
@@ -734,7 +841,16 @@
     </div>
     <div class="date-header" id="todayDate"></div>
     <div class="bonus-banner" id="bonusBanner" style="display:none;"></div>
+    <div class="mystery-box" id="mysteryBox" style="display:none;" onclick="openMysteryBox()">
+      <div class="box-icon">🎁</div>
+      <div class="box-title">神秘宝箱已出现！</div>
+      <p style="font-size:0.85rem;color:#92400e;">今天全部作业完成，点击开启随机奖励</p>
+    </div>
     <div id="todayTasks"></div>
+    <div class="card" id="dailyQualityStats" style="display:none;">
+      <div class="card-title">📊 今日作业品质</div>
+      <div class="daily-stats" id="dailyQualityContent"></div>
+    </div>
     <div class="card" id="todaySummary" style="display:none;">
       <div class="card-title">今日完成度</div>
       <div class="progress-ring-container" id="todayRings"></div>
@@ -1059,7 +1175,7 @@ function loadState(){
     if(typeof s.aiMode === 'boolean') aiMode = s.aiMode;
     return s;
   }
-  return {submissions:{},approved:{},rejected:{},scores:{},errors:[],gameHistory:[],firstDate:null,parentPassword:null,aiSettings:null,aiMode:null};
+  return {submissions:{},approved:{},rejected:{},scores:{},penalties:{},errors:[],gameHistory:[],firstDate:null,parentPassword:null,aiSettings:null,aiMode:null,freezeCards:0,rejectCounts:{},qualityGrades:{},mysteryBoxOpened:null};
 }
 function saveState(){
   state.aiSettings = aiSettings;
@@ -1069,6 +1185,12 @@ function saveState(){
 
 let state = loadState();
 parentPassword = state.parentPassword || '1234';
+// 兼容旧版本数据
+if(!state.penalties) state.penalties = {};
+if(!state.freezeCards) state.freezeCards = 0;
+if(!state.rejectCounts) state.rejectCounts = {};
+if(!state.qualityGrades) state.qualityGrades = {};
+if(!('mysteryBoxOpened' in state)) state.mysteryBoxOpened = null;
 
 function isApproved(taskId){return state.approved[taskId];}
 function isSubmitted(taskId){return state.submissions[taskId] && !state.approved[taskId] && !state.rejected[taskId];}
@@ -1133,7 +1255,7 @@ function renderToday(){
         :'';
       html+=`<div class="task-item ${status}" onclick="handleTaskClick('${t.id}')">
         <div class="task-icon">${state.approved[t.id]?'✓':state.rejected[t.id]?'✕':state.submissions[t.id]?'⏳':''}</div>
-        <div class="task-text">${t.text}</div>
+        <div class="task-text">${t.text} ${state.qualityGrades[t.id]?`<span class="quality-grade grade-${state.qualityGrades[t.id]}" style="margin-left:4px;">${state.qualityGrades[t.id]}级</span>`:''}</div>
         ${photoHtml}
         <div class="task-status ${status}">${statusLabel[status]}</div>
         <div class="task-points">+${t.points}分</div>
@@ -1146,14 +1268,36 @@ function renderToday(){
   // Bonus banner
   const approvedCount=tasks.filter(t=>state.approved[t.id]).length;
   const totalCount=tasks.length;
+  const todayPenalty = state.penalties[today] || 0;
   if(approvedCount===totalCount){
     document.getElementById('bonusBanner').style.display='block';
     document.getElementById('bonusBanner').innerHTML=`🎊 <strong>太棒了！今天全部完成！</strong> <span class="bonus-amount">额外奖励 +30积分</span>`;
-  }else if(approvedCount>0){
-    document.getElementById('bonusBanner').style.display='block';
-    document.getElementById('bonusBanner').innerHTML=`📊 今日进度: <strong>${approvedCount}/${totalCount}</strong> 项已通过审核`;
+    // 显示神秘宝箱
+    document.getElementById('mysteryBox').style.display = (state.mysteryBoxOpened !== today) ? '' : 'none';
+    if(state.mysteryBoxOpened === today){
+      document.getElementById('mysteryBox').classList.add('opened');
+      document.getElementById('mysteryBox').querySelector('.box-title').textContent = '宝箱已开启 ✅';
+      document.getElementById('mysteryBox').querySelector('p').textContent = '明天继续加油，新的宝箱在等你！';
+    } else {
+      document.getElementById('mysteryBox').classList.remove('opened');
+      document.getElementById('mysteryBox').querySelector('.box-title').textContent = '神秘宝箱已出现！';
+      document.getElementById('mysteryBox').querySelector('p').textContent = '点击开启随机奖励（5~50积分）';
+    }
   }else{
-    document.getElementById('bonusBanner').style.display='none';
+    document.getElementById('mysteryBox').style.display = 'none';
+    if(approvedCount>0){
+      document.getElementById('bonusBanner').style.display='block';
+      let bonusHTML = `📊 今日进度: <strong>${approvedCount}/${totalCount}</strong> 项已通过审核`;
+      if(todayPenalty > 0){
+        bonusHTML += ` | <span style="color:#dc2626;">⚠️ 已扣 ${todayPenalty} 分</span>`;
+      }
+      document.getElementById('bonusBanner').innerHTML = bonusHTML;
+    }else if(todayPenalty > 0){
+      document.getElementById('bonusBanner').style.display='block';
+      document.getElementById('bonusBanner').innerHTML = `⚠️ <span style="color:#dc2626;">今日已扣除 <strong>${todayPenalty}</strong> 积分</span> · 加油改进！`;
+    }else{
+      document.getElementById('bonusBanner').style.display='none';
+    }
   }
 
   // Progress rings
@@ -1188,6 +1332,45 @@ function renderToday(){
   });
   document.getElementById('todayRings').innerHTML=ringsHtml;
   document.getElementById('todaySummary').style.display='block';
+
+  // 品质统计
+  const gradeCounts = {S:0,A:0,B:0,C:0,D:0,F:0};
+  const gradeLabels = {S:'🏆S',A:'🌟A',B:'👍B',C:'📝C',D:'⚠️D',F:'❌F'};
+  const gradeColors = {S:'#f59e0b',A:'#22c55e',B:'#3b82f6',C:'#9333ea',D:'#f97316',F:'#ef4444'};
+  tasks.forEach(t => {
+    const g = state.qualityGrades[t.id];
+    if(g && gradeCounts[g] !== undefined) gradeCounts[g]++;
+  });
+  const totalGraded = Object.values(gradeCounts).reduce((a,b)=>a+b,0);
+  const qualityBox = document.getElementById('dailyQualityStats');
+  const qualityContent = document.getElementById('dailyQualityContent');
+  if(totalGraded > 0){
+    qualityBox.style.display = '';
+    let statsHTML = '';
+    Object.entries(gradeCounts).forEach(([g, c]) => {
+      if(c > 0){
+        statsHTML += `<div class="stat-chip" style="border:1px solid ${gradeColors[g]};">
+          ${gradeLabels[g]} ×${c}
+        </div>`;
+      }
+    });
+    // 今日净赚
+    const todayPenalty = state.penalties[today] || 0;
+    const todayEarned = state.scores[today] || 0;
+    const netGain = todayEarned - todayPenalty;
+    statsHTML += `<div class="stat-chip ${netGain>=0?'positive':'negative'}">
+      净<span class="stat-val">${netGain>=0?'+':''}${netGain}</span>分
+    </div>`;
+    if(todayPenalty > 0){
+      statsHTML += `<div class="stat-chip negative">
+        扣<span class="stat-val">-${todayPenalty}</span>分
+      </div>`;
+    }
+    qualityContent.innerHTML = statsHTML;
+  } else {
+    qualityBox.style.display = 'none';
+  }
+
   updateScoreBar();
 }
 
@@ -1338,13 +1521,19 @@ function reviewTask(taskId){
   overlay.querySelector('#approveBtn').onclick=function(){
     const pts=task?task.points:10;
     state.approved[taskId]=true;
+    state.qualityGrades[taskId] = 'B';
     if(state.rejected[taskId]) delete state.rejected[taskId];
-    state.scores[today]=(state.scores[today]||0)+pts;
+    if(state.rejectCounts[taskId]) delete state.rejectCounts[taskId];
+    const streakMult = getStreakMultiplier();
+    const totalPts = Math.round(pts * streakMult);
+    state.scores[today]=(state.scores[today]||0)+totalPts;
     if(!state.firstDate) state.firstDate=new Date().toISOString().split('T')[0];
     // Daily completion bonus
     const tasks=homeworkData[today]||[];
     if(tasks.length>0&&tasks.every(t=>state.approved[t.id])){
       state.scores[today]=(state.scores[today]||0)+30;
+      earnFreezeCard();
+      state.mysteryBoxOpened = null;
     }
     saveState();
     overlay.remove();
@@ -1352,17 +1541,22 @@ function reviewTask(taskId){
     renderReview();
     updateScoreBar();
     checkAchievements();
-    alert(`审核通过！+${pts}积分`);
+    alert(`审核通过！+${totalPts}积分`);
   };
 
   overlay.querySelector('#rejectBtn').onclick=function(){
     state.rejected[taskId]=true;
-    if(state.submissions[taskId]&&!state.approved[taskId]&&!state.rejected[taskId]){}
+    state.rejectCounts[taskId] = (state.rejectCounts[taskId] || 0) + 1;
+    const count = state.rejectCounts[taskId];
+    const penalty = Math.min(count * 3, 12);
+    state.penalties[today] = (state.penalties[today] || 0) + penalty;
+    state.scores[today] = (state.scores[today] || 0) - penalty;
     saveState();
     overlay.remove();
     renderToday();
     renderReview();
-    alert('已标记为需重做，继续加油哦！');
+    updateScoreBar();
+    showPenaltyPopup(`👨‍👩‍👧 家长退回 · -${penalty}积分`);
   };
 
   overlay.querySelector('#cancelBtn').onclick=function(){overlay.remove();};
@@ -1450,14 +1644,20 @@ function renderReview(){
 
 function quickApprove(taskId,points,dateStr){
   state.approved[taskId]=true;
+  state.qualityGrades[taskId] = 'B'; // 手动审核默认B级
   if(state.rejected[taskId]) delete state.rejected[taskId];
+  if(state.rejectCounts[taskId]) delete state.rejectCounts[taskId];
   const today=getTodayStr();
-  state.scores[dateStr||today]=(state.scores[dateStr||today]||0)+parseInt(points);
+  const streakMult = getStreakMultiplier();
+  const totalPts = Math.round(parseInt(points) * streakMult);
+  state.scores[dateStr||today]=(state.scores[dateStr||today]||0)+totalPts;
   if(!state.firstDate) state.firstDate=new Date().toISOString().split('T')[0];
   // Daily bonus
   const tasks=homeworkData[dateStr||today]||[];
   if(tasks.length>0&&tasks.every(t=>state.approved[t.id])){
     state.scores[dateStr||today]=(state.scores[dateStr||today]||0)+30;
+    earnFreezeCard();
+    state.mysteryBoxOpened = null;
   }
   saveState();
   renderToday();
@@ -1467,10 +1667,18 @@ function quickApprove(taskId,points,dateStr){
 }
 function quickReject(taskId){
   state.rejected[taskId]=true;
+  // 手动拒绝也扣分
+  const today = getTodayStr();
+  state.rejectCounts[taskId] = (state.rejectCounts[taskId] || 0) + 1;
+  const count = state.rejectCounts[taskId];
+  const penalty = Math.min(count * 3, 12);
+  state.penalties[today] = (state.penalties[today] || 0) + penalty;
+  state.scores[today] = (state.scores[today] || 0) - penalty;
   saveState();
   renderToday();
   renderReview();
-  alert('已标记为需重做，孩子可以看到并重新提交~');
+  updateScoreBar();
+  showPenaltyPopup(`👨‍👩‍👧 家长退回 · -${penalty}积分`);
 }
 
 // ===================== 家长模式 =====================
@@ -1566,6 +1774,35 @@ function updateScoreBar(){
   document.getElementById('cost-memory').textContent='10积分/局';
   document.getElementById('cost-puzzle').textContent='15积分/局';
   document.getElementById('cost-g2048').textContent='12积分/局';
+
+  // 惩罚摘要
+  const todayPenalty = state.penalties[today] || 0;
+  const penaltyEl = document.getElementById('penaltySummary');
+  if(todayPenalty > 0){
+    penaltyEl.style.display = 'flex';
+    penaltyEl.innerHTML = `⚠️ 今日已扣 <span style="color:#dc2626;font-weight:800;margin-left:4px;">${todayPenalty}</span> 分`;
+  } else {
+    penaltyEl.style.display = 'none';
+  }
+
+  // 冻结卡
+  const freezeEl = document.getElementById('freezeCardBadge');
+  if(state.freezeCards > 0){
+    freezeEl.style.display = 'inline-flex';
+    freezeEl.innerHTML = '🛡️ 冻结卡×' + state.freezeCards;
+  } else {
+    freezeEl.style.display = 'none';
+  }
+
+  // 品质统计
+  if(!document.getElementById('qualityStats') && total > 0){
+    const gradeCounts = {S:0,A:0,B:0,C:0,D:0,F:0};
+    Object.values(state.qualityGrades).forEach(g => { if(gradeCounts[g] !== undefined) gradeCounts[g]++; });
+    const totalGraded = Object.values(gradeCounts).reduce((a,b)=>a+b,0);
+    if(totalGraded > 0 && document.getElementById('panel-today').classList.contains('active')){
+      // Quality stats shown in today panel via renderToday
+    }
+  }
 }
 
 // ===================== AI 智能批改系统 =====================
@@ -1825,11 +2062,24 @@ function handleAIResult(taskId, result){
   });
 
   document.getElementById('aiGradingTitle').textContent = '🤖 AI批改结果';
-  
+
+  const grade = getQualityGrade(completionScore);
+  const gradeLabel = {S:'🏆 S级-完美!', A:'🌟 A级-优秀!', B:'👍 B级-良好', C:'📝 C级-合格', D:'⚠️ D级-待改进', F:'❌ F级-不合格'};
+  const gradeClass = {S:'grade-S', A:'grade-A', B:'grade-B', C:'grade-C', D:'grade-D', F:'grade-F'};
+
+  const penaltyInfo = !passed 
+    ? `<div style="background:#fef2f2;border-radius:12px;padding:10px;margin:8px 0;text-align:left;">
+        <strong style="color:#dc2626;">⚠️ 惩罚提醒：</strong>
+        <span style="font-size:0.85rem;">不通过将扣除积分（${completionScore<40?'8分起':completionScore<70?'5分起':'3分起'}，多次退回逐次递增）</span>
+      </div>`
+    : '';
+
   let contentHTML = `
     <div class="ai-score-circle ${scoreClass}">${completionScore}<span style="font-size:0.8rem;">分</span></div>
     <div class="ai-verdict ${verdictClass}">${verdictText}</div>
+    <span class="quality-grade ${gradeClass[grade]}">${gradeLabel[grade]}</span>
     <p style="color:var(--text-secondary);font-size:0.9rem;margin:8px 0;">${result.verdict || ''}</p>
+    ${penaltyInfo}
     <div class="ai-detail-row">
       <span>完成度评分</span>
       <span style="font-weight:700;color:var(--primary);">${completionScore}/100</span>
@@ -1903,19 +2153,53 @@ function autoApprove(taskId){
     if(t) task = t;
   });
   const pts = task ? task.points : 10;
+
+  // 获取AI评分确定品质等级
+  const aiResult = state._lastAIResult;
+  const completionScore = aiResult ? (aiResult.completion_score || 0) : 80;
+  const grade = getQualityGrade(completionScore);
+
+  // 品质等级加成/罚分
+  const gradeBonus = {S:8, A:5, B:2, C:0, D:-3, F:-5}[grade] || 0;
+  const streakMult = getStreakMultiplier();
+  const totalPts = Math.round((pts + gradeBonus) * streakMult);
+
   state.approved[taskId] = true;
+  state.qualityGrades[taskId] = grade;
   if(state.rejected[taskId]) delete state.rejected[taskId];
-  state.scores[today] = (state.scores[today] || 0) + pts;
+  state.scores[today] = (state.scores[today] || 0) + totalPts;
   if(!state.firstDate) state.firstDate = new Date().toISOString().split('T')[0];
+
+  // 重置拒绝计数
+  if(state.rejectCounts[taskId]) delete state.rejectCounts[taskId];
+
   // 每日完成奖励
   const tasks = homeworkData[today] || [];
   if(tasks.length > 0 && tasks.every(t => state.approved[t.id])){
     state.scores[today] = (state.scores[today] || 0) + 30;
+    // 完成当天所有作业 → 获得1张冻结卡 + 解锁神秘宝箱
+    earnFreezeCard();
+    state.mysteryBoxOpened = null; // 重置宝箱状态
   }
+
   // 自动提取错题到错题本
   autoExtractErrors(taskId, task);
   saveState();
   closeAIGrading();
+
+  // 显示品质等级和积分
+  const gradeLabel = {S:'🏆完美', A:'🌟优秀', B:'👍良好', C:'📝合格', D:'⚠️待改进', F:'❌不合格'};
+  const emoji = gradeBonus >= 0 ? '🎉' : '😅';
+  const sign = gradeBonus >= 0 ? '+' : '';
+
+  if(gradeBonus !== 0 || streakMult > 1){
+    const parts = [];
+    parts.push(`${pts}分基础`);
+    if(gradeBonus !== 0) parts.push(`${sign}${gradeBonus}品质${gradeBonus>0?'奖励':'调整'}`);
+    if(streakMult > 1) parts.push(`×${streakMult}连续打卡`);
+    showRewardPopup(`${emoji} ${gradeLabel[grade]}\n+${totalPts}积分`, '#22c55e');
+  }
+
   renderToday();
   renderReview();
   renderErrors();
@@ -1924,8 +2208,155 @@ function autoApprove(taskId){
   checkAchievements();
 }
 
+// 获取品质等级
+function getQualityGrade(score){
+  if(score >= 90) return 'S';
+  if(score >= 80) return 'A';
+  if(score >= 70) return 'B';
+  if(score >= 60) return 'C';
+  if(score >= 40) return 'D';
+  return 'F';
+}
+
+// 冻结卡
+function earnFreezeCard(){
+  state.freezeCards = Math.min((state.freezeCards || 0) + 1, 3);
+  saveState();
+  updateScoreBar();
+}
+
+function showFreezeCardInfo(){
+  if(!state.freezeCards || state.freezeCards <= 0){
+    alert('你还没有冻结卡哦~ 连续3天或全部完成当天作业可获得一张！');
+    return;
+  }
+  const overlay = document.createElement('div');
+  overlay.className = 'freeze-use-overlay';
+  overlay.innerHTML = `<div class="freeze-use-card">
+    <div style="font-size:3rem;">🛡️</div>
+    <h3 style="margin:10px 0;">连胜冻结卡 ×${state.freezeCards}</h3>
+    <p style="color:var(--text-secondary);font-size:0.9rem;margin-bottom:16px;">
+      如果某天没有完成作业，使用冻结卡可以保护连胜不被中断！
+    </p>
+    <button class="btn-primary" style="width:100%;margin-bottom:8px;" onclick="useFreezeCard();this.closest('.freeze-use-overlay').remove();">
+      🛡️ 使用一张冻结卡
+    </button>
+    <button class="btn-secondary" style="width:100%;" onclick="this.closest('.freeze-use-overlay').remove();">
+      暂不使用
+    </button>
+  </div>`;
+  document.body.appendChild(overlay);
+}
+
+function useFreezeCard(){
+  if(!state.freezeCards || state.freezeCards <= 0) return;
+  state.freezeCards--;
+  // 标记今天为"已冻结"（不扣连胜）
+  const today = getTodayStr();
+  state.scores[today] = (state.scores[today] || 0);
+  saveState();
+  updateScoreBar();
+  alert('🛡️ 冻结卡已使用！今天的连胜将会被保护。加油，明天继续努力！');
+}
+
+// 神秘宝箱
+function openMysteryBox(){
+  if(state.mysteryBoxOpened === getTodayStr()) return;
+  const rewards = [
+    {pts: 5, msg: '小额奖励', emoji: '💎'},
+    {pts: 10, msg: '幸运奖励', emoji: '🍀'},
+    {pts: 15, msg: '中等奖励', emoji: '🎁'},
+    {pts: 20, msg: '大额奖励', emoji: '💫'},
+    {pts: 30, msg: '超级奖励', emoji: '🌟'},
+    {pts: 50, msg: '至尊大奖！', emoji: '👑'},
+  ];
+  const weights = [30, 25, 20, 15, 8, 2]; // 概率权重
+  const totalW = weights.reduce((a,b)=>a+b,0);
+  let r = Math.random() * totalW;
+  let idx = 0;
+  for(let i=0;i<weights.length;i++){ r-=weights[i]; if(r<=0){idx=i;break;} }
+  const reward = rewards[idx];
+
+  const today = getTodayStr();
+  state.scores[today] = (state.scores[today] || 0) + reward.pts;
+  state.mysteryBoxOpened = today;
+  saveState();
+  renderToday();
+  updateScoreBar();
+  showRewardPopup(`${reward.emoji} ${reward.msg}!\n+${reward.pts}积分`, '#f59e0b');
+}
+
+// 惩罚制度
+function applyPenalty(taskId, reason, basePoints){
+  const today = getTodayStr();
+  // 递增惩罚：同一任务拒绝次数越多扣分越重
+  state.rejectCounts[taskId] = (state.rejectCounts[taskId] || 0) + 1;
+  const rejectCount = state.rejectCounts[taskId];
+  const penaltyMultiplier = Math.min(rejectCount, 3); // 最多3倍惩罚
+  const penalty = basePoints * penaltyMultiplier;
+
+  state.penalties[today] = (state.penalties[today] || 0) + penalty;
+  state.scores[today] = (state.scores[today] || 0) - penalty;
+
+  // 记录惩罚日志
+  if(!state._penaltyLog) state._penaltyLog = [];
+  state._penaltyLog.push({date:today, reason, points:penalty, taskId, time:new Date().toISOString()});
+  // 只保留最近50条
+  if(state._penaltyLog.length > 50) state._penaltyLog = state._penaltyLog.slice(-50);
+
+  saveState();
+  renderToday();
+  renderReview();
+  updateScoreBar();
+
+  // 显示惩罚动画
+  const msgs = [
+    `😢 需要重做！-${penalty}积分`,
+    `📉 第${rejectCount}次退回 -${penalty}积分`,
+    `⚠️ ${reason} -${penalty}积分`
+  ];
+  showPenaltyPopup(msgs[Math.min(rejectCount-1, 2)]);
+
+  // 提示改进
+  if(rejectCount >= 2){
+    setTimeout(() => {
+      alert(`💡 第${rejectCount}次被退回了哦~\n\n建议：\n1. 仔细检查再提交\n2. 字迹写工整些\n3. 不确定的题目先标记\n\n加油，你可以的！`);
+    }, 2800);
+  }
+}
+
+// 显示奖励飘字
+function showRewardPopup(text, color){
+  const el = document.createElement('div');
+  el.className = 'reward-popup';
+  el.innerHTML = text.replace(/\n/g,'<br>');
+  el.style.color = color || '#22c55e';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+
+// 显示惩罚弹窗
+function showPenaltyPopup(text){
+  const el = document.createElement('div');
+  el.className = 'penalty-popup';
+  el.textContent = text;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2700);
+}
+
 function autoReject(taskId){
   state.rejected[taskId] = true;
+  // 应用惩罚扣分
+  const aiResult = state._lastAIResult;
+  const score = aiResult ? (aiResult.completion_score || 0) : 0;
+  if(score < 40){
+    applyPenalty(taskId, '作业质量不达标(评分' + score + ')', 8);
+  } else if(score < 70){
+    applyPenalty(taskId, '作业需要改进(评分' + score + ')', 5);
+  } else {
+    applyPenalty(taskId, '被退回需重做', 3);
+  }
+  delete state._lastAIResult;
   saveState();
   closeAIGrading();
   renderToday();
@@ -2239,6 +2670,15 @@ const achievements=[
   {id:'game_win',icon:'🎮',name:'游戏高手',desc:'赢得任意小游戏',check:()=>(state.gameHistory||[]).some(g=>g.type==='win')},
   {id:'half_done',icon:'📚',name:'过半啦',desc:'完成暑假作业一半以上',check:()=>{const all=Object.values(homeworkData).flat();const done=all.filter(t=>state.approved[t.id]).length;return done>=all.length/2;}},
   {id:'all_done',icon:'🎓',name:'暑假王者',desc:'完成所有暑假作业',check:()=>{const all=Object.values(homeworkData).flat();return all.length>0&&all.every(t=>state.approved[t.id]);}},
+  {id:'quality_S',icon:'👑',name:'S级品质',desc:'获得S级（90分以上）作业评价',check:()=>Object.values(state.qualityGrades).some(g=>g==='S')},
+  {id:'quality_3S',icon:'💎',name:'品质达人',desc:'累计3次S级评价',check:()=>Object.values(state.qualityGrades).filter(g=>g==='S').length>=3},
+  {id:'freeze_card',icon:'🛡️',name:'冻结卡持有者',desc:'获得第一张连胜冻结卡',check:()=>(state.freezeCards||0)>=1},
+  {id:'mystery_unlocked',icon:'🎁',name:'宝箱开启者',desc:'第一次开启神秘宝箱',check:()=>state.mysteryBoxOpened!==null},
+  {id:'no_penalty_week',icon:'🛡️',name:'零扣分周',desc:'连续7天没有被扣分',check:()=>{
+    let noPenaltyDays=0;const todayDate=new Date();
+    for(let i=0;i<60;i++){const d=new Date(todayDate);d.setDate(d.getDate()-i);const key=`${d.getMonth()+1}.${d.getDate()}`;const tasks=homeworkData[key]||[];if(tasks.length===0){if(i===0) continue;break;}if(!state.penalties[key]||state.penalties[key]===0) noPenaltyDays++;else break;}
+    return noPenaltyDays>=7;
+  }},
 ];
 function checkAchievements(){renderAchievements();}
 function renderAchievements(){
